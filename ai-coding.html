@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Build with an AI Coding Agent — a FIELD guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* ─────────────────────────────────────────────────────────────
+     Same reading experience as learn.html / connect.html / plugins.html:
+     warm paper, single column, folds, a chapter menu. This guide is the
+     landing page for the two AI-agent spec files (AI-JS.md, AI-PLUGINS.md)
+     — instead of downloading them cold, a reader lands here first, sees
+     one worked example, and then grabs whichever spec they actually need.
+     ───────────────────────────────────────────────────────────── */
+
+  :root {
+    --paper:      #faf9f6;
+    --paper-2:    #f2f0ea;
+    --card:       #ffffff;
+    --ink:        #111111;
+    --muted:      #666666;
+    --faint:      #999999;
+    --line:       #111111;
+
+    --accent:     #7c3aed;
+    --accent-ink: #6d28d9;
+    --accent-soft:#ede9fe;
+    --accent-line:#7c3aed;
+    --accent2:      #c2410c;
+    --accent2-soft: #fdece1;
+
+    --code-bg:    #111111;
+    --code-ink:   #f2f0ea;
+    --code-dim:   #999999;
+    --code-key:   #cfcac0;
+
+    --sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --serif: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+    --mono: 'DM Mono', ui-monospace, "SF Mono", monospace;
+
+    --bar-h: 58px;
+    --col: 680px;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 30px; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 19px;
+    line-height: 1.72;
+    -webkit-font-smoothing: antialiased;
+    padding-bottom: var(--bar-h);
+  }
+
+  .ic { width: 1.1em; height: 1.1em; stroke: currentColor; fill: none;
+        stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round;
+        vertical-align: -0.16em; flex: none; }
+
+  .menu { position: fixed; top: 18px; right: 22px; z-index: 60; }
+  .menu-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--card); color: var(--ink);
+    border: 2px solid var(--line); border-radius: 0;
+    padding: 9px 15px; font: inherit; font-size: 0.82rem; cursor: pointer;
+    box-shadow: 3px 3px 0 var(--line);
+  }
+  .menu-btn .lbl { font-family: var(--mono); letter-spacing: 0.05em; }
+  .menu-btn .caret { transition: transform .25s ease; color: var(--faint); }
+  .menu:hover .menu-btn .caret, .menu.open .menu-btn .caret { transform: rotate(180deg); }
+
+  .menu-panel {
+    position: absolute; top: calc(100% + 10px); right: 0;
+    width: 288px; max-height: 76vh; overflow-y: auto;
+    background: var(--card); border: 2px solid var(--line);
+    border-radius: 0; padding: 8px;
+    box-shadow: 6px 6px 0 var(--line);
+    opacity: 0; transform: translateY(-12px) scale(.98);
+    transform-origin: top right; pointer-events: none;
+    transition: opacity .26s ease, transform .3s cubic-bezier(.2,.8,.25,1);
+  }
+  .menu:hover .menu-panel, .menu:focus-within .menu-panel, .menu.open .menu-panel {
+    opacity: 1; transform: none; pointer-events: auto;
+  }
+  .menu-panel .cap { font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); padding: 10px 12px 6px; }
+  .menu-panel button.jump {
+    display: flex; align-items: center; gap: 11px; width: 100%; text-align: left;
+    background: none; border: none; border-radius: 0; cursor: pointer;
+    padding: 9px 12px; font: inherit; font-size: 0.9rem; color: var(--muted); line-height: 1.3;
+  }
+  .menu-panel button.jump:hover { background: var(--paper-2); color: var(--ink); }
+  .menu-panel button.jump.active { background: var(--accent); color: #fff; }
+  .menu-panel button.jump.active .num { color: rgba(255,255,255,.7); }
+  .menu-panel button.jump .num { font-family: var(--mono); font-size: 0.72rem; color: var(--faint); width: 16px; flex: none; }
+  .menu-panel button.jump .ic { color: inherit; }
+  .menu-panel button.jump .tick { margin-left: auto; opacity: 0; color: var(--accent); width: 15px; height: 15px; }
+  .menu-panel button.jump.done .tick { opacity: 1; }
+  .menu-panel button.jump.active .tick { color: #fff; }
+
+  .stage { max-width: var(--col); margin: 0 auto; padding: 0 26px; }
+  .fold {
+    min-height: 78vh;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 64px 0 40px;
+    opacity: 0.42; transition: opacity .6s ease;
+  }
+  .fold.active { opacity: 1; }
+  .fold + .fold { border-top: 2px solid var(--line); }
+  .fold .inner { width: 100%; }
+  .r { opacity: 0; transform: translateY(16px); transition: opacity .6s ease, transform .6s ease; }
+  .fold.seen .r { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { .fold { opacity: 1; } .r { opacity: 1; transform: none; } }
+
+  .scrollcue { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: 40px; color: var(--faint); font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.14em; text-transform: uppercase; }
+  .scrollcue svg { animation: bob 1.9s ease-in-out infinite; }
+  @keyframes bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(5px)} }
+
+  .tag { display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.13em; text-transform: uppercase; color: var(--accent-ink); background: var(--accent-soft); border: 2px solid var(--accent-line); border-radius: 0; padding: 5px 13px; margin-bottom: 22px; }
+  h1 { font-family: var(--serif); font-weight: 700; font-size: clamp(2rem, 5vw, 2.9rem); line-height: 0.98; letter-spacing: -0.03em; text-transform: uppercase; margin: 0 0 18px; }
+  h2 { font-family: var(--serif); font-weight: 700; font-size: 1.5rem; letter-spacing: -0.02em; text-transform: uppercase; margin: 34px 0 10px; }
+  h3 { font-size: 1.06rem; margin: 22px 0 8px; }
+  p { margin: 0 0 16px; color: var(--muted); }
+  p.lead { font-size: 1.18rem; color: var(--ink); }
+  .fold p.lead:first-of-type { font-family: var(--serif); font-weight: 500; }
+  strong { color: var(--ink); font-weight: 640; }
+  em { color: var(--ink); }
+  a { color: var(--accent-ink); text-underline-offset: 3px; }
+  ul, ol { color: var(--muted); padding-left: 1.2em; }
+  li { margin: 6px 0; }
+
+  .steps { list-style: none; counter-reset: s; padding: 0; margin: 22px 0; }
+  .steps > li { counter-increment: s; position: relative; padding: 16px 18px 16px 58px; background: var(--card); border: 2px solid var(--line); border-radius: 0; margin: 10px 0; }
+  .steps > li::before { content: counter(s); position: absolute; left: 16px; top: 15px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 0.82rem; color: #fff; background: var(--accent); border-radius: 0; }
+  .steps > li .act { color: var(--ink); font-weight: 560; display: block; }
+  .steps > li .see { display: flex; align-items: baseline; gap: 7px; margin-top: 6px; font-size: 0.92rem; color: var(--muted); }
+  .steps > li .see b { color: var(--accent-ink); font-weight: 600; font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; flex: none; }
+
+  .note { border-radius: 0; padding: 15px 19px; margin: 18px 0; font-size: 0.96rem; }
+  .note .lbl { display: flex; align-items: center; gap: 7px; font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+  .note p { color: var(--ink); margin: 0; }
+  .note p + p { margin-top: 8px; }
+  .note.why { background: var(--card); border: 2px solid var(--line); }
+  .note.why .lbl { color: var(--accent-ink); }
+  .note.diary { background: var(--accent-soft); border: 2px solid var(--accent-line); }
+  .note.diary .lbl { color: var(--accent-ink); }
+  .note.fix { background: #fbf6ec; border: 1px solid #ecdcb8; }
+  .note.fix .lbl { color: #8a6d1e; }
+  .note.fix ul { margin: 4px 0 0; color: var(--ink); }
+  .note.fix li { margin: 4px 0; }
+
+  .flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 8px; margin: 24px 0; font-family: var(--mono); font-size: 0.78rem; }
+  .flow .box { background: var(--card); border: 2px solid var(--line); border-radius: 0; padding: 13px 15px; flex: 1 1 130px; text-align: center; }
+  .flow .box small { display: block; color: var(--faint); text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.62rem; margin-bottom: 4px; }
+  .flow .box b { color: var(--ink); font-weight: 620; }
+  .flow .arrow { align-self: center; color: var(--accent); flex: none; }
+  .glyph { width: 32px; height: 32px; }
+
+  .concepts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 22px; }
+  .concept { background: var(--card); border: 2px solid var(--line); border-top: 3px solid var(--accent); border-radius: 0; padding: 16px 18px; }
+  .concept:nth-of-type(2n) { border-top-color: var(--accent2); }
+  .concept:nth-of-type(2n) .word { color: var(--accent2); }
+  .concept .word { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-ink); }
+  .concept h3 { margin: 6px 0 5px; font-size: 1.1rem; }
+  .concept p { margin: 0; font-size: 0.92rem; }
+
+  .exs { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 22px; }
+  .ex { background: var(--card); border: 2px solid var(--line); border-radius: 0; padding: 17px 19px; }
+  .ex-top { display: flex; align-items: center; gap: 11px; margin-bottom: 8px; }
+  .ex-ic { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; flex: none; background: var(--accent-soft); color: var(--accent-ink); border-radius: 0; }
+  .ex-ic .ic { width: 21px; height: 21px; }
+  .ex-top h3 { margin: 0; font-size: 1.02rem; }
+  .ex-diff { margin-left: auto; font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); border: 2px solid var(--line); border-radius: 0; padding: 3px 9px; }
+  .ex-diff.easy { color: var(--accent-ink); border-color: var(--accent-line); background: var(--accent-soft); }
+  .ex > p { font-size: 0.91rem; margin-bottom: 12px; }
+  .ex-recipe { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.03em; background: var(--paper); border: 2px solid var(--line); border-radius: 0; padding: 3px 9px; color: var(--muted); }
+  .chip b { color: var(--accent-ink); font-weight: 600; }
+
+  .filename { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.04em; color: var(--faint); margin: 18px 0 -8px; }
+  pre { background: var(--code-bg); color: var(--code-ink); border-radius: 0; padding: 17px 19px; overflow-x: auto; font-family: var(--mono); font-size: 0.84rem; line-height: 1.62; margin: 16px 0; }
+  pre .c { color: var(--code-dim); }
+  pre .k { color: var(--code-key); }
+  code { font-family: var(--mono); font-size: 0.85em; background: var(--paper-2); border: 2px solid var(--line); border-radius: 0; padding: 1px 6px; }
+  pre code { background: none; border: none; padding: 0; font-size: 1em; }
+
+  .check { list-style: none; padding: 0; margin: 18px 0; }
+  .check li { padding-left: 30px; position: relative; margin: 10px 0; color: var(--ink); }
+  .check li svg { position: absolute; left: 0; top: 4px; color: var(--accent); }
+
+  .who { display: flex; flex-wrap: wrap; gap: 10px; margin: 22px 0; }
+  .who .card { flex: 1 1 190px; background: var(--card); border: 2px solid var(--line); border-radius: 0; padding: 14px 16px; }
+  .who .card .role { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-ink); margin-bottom: 6px; }
+  .who .card p { margin: 0; font-size: 0.9rem; }
+
+  .spec-links { display: flex; flex-wrap: wrap; gap: 10px; margin: 22px 0; }
+  .spec-links a.dl { flex: 1 1 260px; display: flex; align-items: center; gap: 12px; background: var(--card); border: 2px solid var(--line); border-radius: 0; padding: 14px 16px; text-decoration: none; box-shadow: 3px 3px 0 var(--line); transition: transform .15s ease, box-shadow .15s ease; }
+  .spec-links a.dl:hover { transform: translate(-2px,-2px); box-shadow: 5px 5px 0 var(--line); }
+  .spec-links a.dl .dl-ic { display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; flex: none; background: var(--accent-soft); color: var(--accent-ink); }
+  .spec-links a.dl .dl-body b { display: block; color: var(--ink); font-size: 0.96rem; }
+  .spec-links a.dl .dl-body span { display: block; font-family: var(--mono); font-size: 0.72rem; color: var(--faint); margin-top: 2px; }
+
+  .footbar {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; height: var(--bar-h);
+    display: flex; align-items: center; gap: 16px;
+    background: rgba(247,243,234,0.9); backdrop-filter: blur(9px);
+    border-top: 2px solid var(--line); padding: 0 22px;
+  }
+  .footbar .nb { display: inline-flex; align-items: center; gap: 8px; background: none; border: none; cursor: pointer; font: inherit; font-size: 0.9rem; color: var(--ink); padding: 8px 6px; border-radius: 0; }
+  .footbar .nb:disabled { color: var(--faint); cursor: default; }
+  .footbar .nb.next { margin-left: auto; color: var(--accent-ink); font-weight: 600; }
+  .footbar .nb:not(:disabled):hover { color: var(--accent-ink); }
+  .footbar .pos { position: absolute; left: 50%; transform: translateX(-50%); font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.06em; color: var(--faint); }
+  .footbar .pos b { color: var(--accent-ink); }
+  .footbar .track { position: absolute; top: -1px; left: 0; height: 2px; background: var(--accent); transition: width .4s ease; }
+
+  @media (max-width: 720px) {
+    body { font-size: 18px; }
+    .concepts, .exs { grid-template-columns: 1fr; }
+    .footbar .pos { display: none; }
+    .menu { top: 14px; right: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── ICON SPRITE ── -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></symbol>
+  <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/></symbol>
+  <symbol id="i-shapes" viewBox="0 0 24 24"><path d="M8.3 10a.7.7 0 0 1-.626-1.079L11.4 3a.7.7 0 0 1 1.198 0l3.726 5.921A.7.7 0 0 1 15.7 10Z"/><rect x="3" y="14" width="7" height="7" rx="1"/><circle cx="17.5" cy="17.5" r="3.5"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+  <symbol id="i-chevD" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></symbol>
+  <symbol id="i-arrowR" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></symbol>
+  <symbol id="i-arrowL" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="12" y1="8" x2="12.01" y2="8"/></symbol>
+  <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></symbol>
+  <symbol id="i-plug" viewBox="0 0 24 24"><path d="M9 2v4M15 2v4M6 9h12v3a6 6 0 0 1-12 0z"/><path d="M12 18v4"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></symbol>
+  <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5.76.76 1.23 1.52 1.41 2.5"/></symbol>
+  <symbol id="i-bot" viewBox="0 0 24 24"><rect x="4" y="9" width="16" height="11" rx="2"/><path d="M9 9V6a3 3 0 0 1 6 0v3"/><line x1="9" y1="14" x2="9.01" y2="14"/><line x1="15" y1="14" x2="15.01" y2="14"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
+  <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M5 13a10 10 0 0 1 14 0"/><path d="M8.5 16.5a5 5 0 0 1 7 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></symbol>
+</defs></svg>
+
+<!-- ── CHAPTER MENU ── -->
+<div class="menu" id="menu">
+  <button class="menu-btn" id="menuBtn" aria-haspopup="true" aria-expanded="false">
+    <svg class="ic"><use href="#i-list"/></svg>
+    <span class="lbl">Chapters</span>
+    <svg class="ic caret"><use href="#i-chevD"/></svg>
+  </button>
+  <div class="menu-panel" id="menuPanel">
+    <div class="cap">Jump to a chapter</div>
+    <nav id="jumpNav"></nav>
+  </div>
+</div>
+
+<div class="stage">
+
+  <!-- 0 · WELCOME -->
+  <section class="fold" data-i="0">
+    <div class="inner">
+      <span class="tag r"><svg class="ic"><use href="#i-bot"/></svg> Start here</span>
+      <h1 class="r">Build FIELD projects with an AI coding agent.</h1>
+      <p class="lead r">FIELD has two written specs — <strong>AI-JS.md</strong> and <strong>AI-PLUGINS.md</strong> — meant to be read by an AI coding assistant (Claude, Cursor, Copilot, whatever you use), not a human. Handing one to your agent is often faster than reading the guide yourself.</p>
+      <p class="r">This page is the front door to both. Read it first, watch one worked example — an <strong>ESP32 board and a p5.js sketch talking to each other through FIELD</strong> — then grab whichever spec matches what you're building.</p>
+      <div class="note why r"><span class="lbl"><svg class="ic"><use href="#i-info"/></svg> Why not just download the file?</span>
+        <p>The spec files are dense and literal on purpose — an agent wants a strict contract, not prose. That makes them a bad first read for a human. This page is the human-readable version: one real example, then the spec, in that order.</p></div>
+      <div class="scrollcue r"><svg class="ic"><use href="#i-chevD"/></svg> scroll · or use back / next below</div>
+    </div>
+  </section>
+
+  <!-- 1 · TWO SPECS, TWO JOBS -->
+  <section class="fold" data-i="1">
+    <div class="inner">
+      <span class="tag r"><svg class="ic"><use href="#i-shapes"/></svg> Chapter 1</span>
+      <h1 class="r">Two specs, two different jobs.</h1>
+      <p class="lead r">Both files describe a contract for an agent to follow literally. They cover opposite ends of FIELD: one is about the screen, the other is about the wire.</p>
+      <div class="concepts r">
+        <div class="concept"><span class="word"><svg class="ic"><use href="#i-cpu"/></svg> AI-JS.md</span><h3>Software side</h3><p>How a p5.js sketch or web page reads live FIELD values over <code>field-bridge.js</code>. No hardware involved.</p></div>
+        <div class="concept"><span class="word"><svg class="ic"><use href="#i-plug"/></svg> AI-PLUGINS.md</span><h3>Hardware side</h3><p>How to write a <code>.field-plugin.json</code> file that teaches FIELD a new sensor chip on an Arduino/ESP32 board.</p></div>
+      </div>
+      <p class="r">Most real projects use <em>both</em>: a board reading a sensor FIELD already knows (or a plugin you asked an agent to write), and a sketch drawing the result. That's exactly what the worked example in the next chapters builds.</p>
+    </div>
+  </section>
+
+  <!-- 2 · THE EXAMPLE, WHAT WE'RE BUILDING -->
+  <section class="fold" data-i="2">
+    <div class="inner">
+      <span class="tag r"><svg class="ic"><use href="#i-cpu"/></svg> Chapter 2 · worked example</span>
+      <h1 class="r">An ESP32 knob that moves a p5.js sketch.</h1>
+      <p class="lead r">One ESP32 board, one potentiometer, one browser tab. Turn the knob — a circle drawn in p5.js moves across the screen, live, over Wi-Fi.</p>
+      <div class="flow r">
+        <div class="box"><small>ESP32</small><b>reads TILT/knob</b></div>
+        <div class="arrow"><canvas class="glyph" data-shape="arrow" width="32" height="32"></canvas></div>
+        <div class="box"><small>FIELD canvas</small><b>Cue + Mechanism</b></div>
+        <div class="arrow"><canvas class="glyph" data-shape="arrow" width="32" height="32"></canvas></div>
+        <div class="box"><small>p5.js sketch</small><b>field-bridge.js</b></div>
+      </div>
+      <p class="r">The ESP32 talks to FIELD the normal way — generated Arduino code, wired over the same Wi-Fi as your computer (or plain USB serial). The sketch talks to FIELD over a local WebSocket via <code>field-bridge.js</code>. FIELD sits in the middle, applying whatever Cue and Mechanism you drew on the canvas — the two ends never talk to each other directly.</p>
+      <div class="note diary r"><span class="lbl"><svg class="ic"><use href="#i-wifi"/></svg> What you need</span>
+        <p>An ESP32 dev board, one potentiometer (or reuse your phone's tilt sensor instead — no board required to try the software half), and the FIELD desktop app running. Board and computer don't even need the same Wi-Fi if you flash over USB.</p></div>
+    </div>
+  </section>
+
+  <!-- 3 · SET UP THE ESP32 SIDE -->
+  <section class="fold" data-i="3">
+    <div class="inner">
+      <span class="tag r"><svg class="ic"><use href="#i-cpu"/></svg> Chapter 3</span>
+      <h1 class="r">Step one: the ESP32 sends a number.</h1>
+      <p class="r">You don't hand-write any Arduino code for this — FIELD generates the whole sketch from the canvas.</p>
+      <ol class="steps r">
+        <li><span class="act">Open FIELD. Add an <strong>Actor</strong> — call it "Knob" — and give it a <strong>SLIDER</strong> input role.</span><span class="see"><b>See</b> the Actor appear on the canvas with one input port.</span></li>
+        <li><span class="act">Open <strong>Actor Context</strong> for Knob, set board family to <strong>ESP32</strong>, and pick the analog pin your potentiometer's wiper is wired to.</span><span class="see"><b>See</b> a pin selector filtered to valid ESP32 analog pins.</span></li>
+        <li><span class="act">Open the <strong>Arduino code</strong> panel, choose Wi-Fi or USB transport, and either use <strong>one-click upload</strong> or copy the generated sketch into the Arduino IDE yourself.</span><span class="see"><b>See</b> a complete <code>.ino</code> file — includes, setup, and a loop reading <code>analogRead()</code> and sending it to FIELD.</span></li>
+        <li><span class="act">Power the board. Turn the knob.</span><span class="see"><b>See</b> the SLIDER value in the Actor panel move live from 0 to 1.</span></li>
+      </ol>
+      <div class="note why r"><span class="lbl"><svg class="ic"><use href="#i-info"/></svg> No board yet? Use your phone instead</span>
+        <p>Skip this chapter and give Knob a <strong>TILT</strong> role instead, connected via <strong>Connect → Phone</strong>. Everything in Chapters 4–5 works identically — FIELD doesn't care whether the number came from an ESP32 or a phone.</p></div>
+    </div>
+  </section>
+
+  <!-- 4 · DRAW THE CUE -->
+  <section class="fold" data-i="4">
+    <div class="inner">
+      <span class="tag r"><svg class="ic"><use href="#i-shapes"/></svg> Chapter 4</span>
+      <h1 class="r">Step two: draw one Cue.</h1>
+      <p class="lead r">Add a second Actor — call it "Ball" — with a <strong>MOVE</strong> output role. Drag from Knob's SLIDER port to Ball's MOVE port. That line is the Cue; the pill on it is the Mechanism.</p>
+      <p class="r">Leave the Mechanism as a plain <strong>DIAL</strong> — output tracks input directly, 0 to 1. Now turning the knob changes Ball's MOVE value, visible live in the Actor panel, with nothing written yet.</p>
+      <div class="note diary r"><span class="lbl"><svg class="ic"><use href="#i-pencil"/></svg> Try this</span>
+        <p>Swap the Mechanism to <strong>SWITCH</strong> with a threshold at 0.5 — the ball should now snap between two positions instead of sliding smoothly. This is the part an AI agent never sees or needs to know about: it only ever reads the number that comes out the other side.</p></div>
+    </div>
+  </section>
+
+  <!-- 5 · THE P5.JS SIDE -->
+  <section class="fold" data-i="5">
+    <div class="inner">
+      <span class="tag r"><svg class="ic"><use href="#i-file"/></svg> Chapter 5</span>
+      <h1 class="r">Step three: read it in p5.js.</h1>
+      <p class="lead r">This is the part <strong>AI-JS.md</strong> is written for — hand this exact file to your coding agent and ask for a sketch, or copy the pattern below by hand.</p>
+      <p class="filename r">knob-ball.html</p>
+<pre class="r"><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;&lt;meta charset="utf-8" /&gt;&lt;/head&gt;
+&lt;body&gt;
+&lt;script src="https://cdn.jsdelivr.net/npm/p5@1.9.4/lib/p5.min.js"&gt;&lt;/script&gt;
+&lt;script src="http://localhost:5173/field-bridge.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+function setup() {
+  createCanvas(windowWidth, windowHeight);
+  noStroke();
+}
+
+function draw() {
+  background(13, 12, 10);
+
+  const move = field.get('MOVE') ?? 0.5;   // Ball's Cue output, 0-1
+  const x = move * width;                  // 0-1 -> across the screen
+
+  fill(124, 58, 237);
+  circle(x, height / 2, 60);
+
+  fill(255); textSize(12); textFont('monospace');
+  text(field.connected ? 'FIELD ● live' : 'FIELD ○ waiting…', 16, 24);
+}
+
+function windowResized() { resizeCanvas(windowWidth, windowHeight); }
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+      <p class="r">Save it, open it in a browser while FIELD is running, and turn the knob — the violet circle tracks it in real time. No build step, no npm install: just the two <code>&lt;script&gt;</code> tags.</p>
+    </div>
+  </section>
+
+  <!-- 6 · USING THE AGENT -->
+  <section class="fold" data-i="6">
+    <div class="inner">
+      <span class="tag r"><svg class="ic"><use href="#i-bot"/></svg> Chapter 6 · the agent workflow</span>
+      <h1 class="r">Let the agent write the sketch for you.</h1>
+      <p class="lead r">Once the ESP32 and the Cue exist (Chapters 3–4), the fastest way to get the p5.js half is to describe what you want and hand your agent the spec — not to write it yourself.</p>
+      <ol class="steps r">
+        <li><span class="act">Open a chat with your coding agent (Claude Code, Cursor, etc.) in a folder next to FIELD's <code>field-bridge.js</code>.</span><span class="see"><b>See</b> an empty project — no scaffolding needed.</span></li>
+        <li><span class="act">Paste in <strong>AI-JS.md</strong> (link below) and describe your sketch in one or two sentences — e.g. "a p5.js sketch where a circle's x position follows FIELD's MOVE output, and its glow follows GLOW."</span><span class="see"><b>See</b> the agent write a complete, runnable HTML file matching the pattern in Chapter 5.</span></li>
+        <li><span class="act">Open the file, run FIELD, turn the knob (or tilt your phone) and check it live.</span><span class="see"><b>See</b> the sketch react immediately — no compiling, no server.</span></li>
+        <li><span class="act">Building custom hardware instead? Paste <strong>AI-PLUGINS.md</strong> and describe your exact sensor chip — the agent writes the <code>.field-plugin.json</code> file, following the same rules as the <a href="plugins.html">plugin-writing guide</a>.</span><span class="see"><b>See</b> a plugin file you install through Connect → Plugins, no code review needed.</span></li>
+      </ol>
+      <div class="note why r"><span class="lbl"><svg class="ic"><use href="#i-info"/></svg> Why the specs read strangely</span>
+        <p>Both files are written as a strict contract, not a tutorial: exact role names, exact function signatures, an explicit Do/Don't list. That's deliberate — it's what keeps an agent from inventing role names or wire formats that don't exist in FIELD.</p></div>
+    </div>
+  </section>
+
+  <!-- 7 · GET THE SPECS -->
+  <section class="fold" data-i="7">
+    <div class="inner">
+      <span class="tag r"><svg class="ic"><use href="#i-download"/></svg> Chapter 7</span>
+      <h1 class="r">Get the spec your agent needs.</h1>
+      <p class="lead r">Download whichever matches what you're building, and paste it straight into your agent's chat.</p>
+      <div class="spec-links r">
+        <a class="dl" href="AI-JS.md" download>
+          <span class="dl-ic"><svg class="ic"><use href="#i-file"/></svg></span>
+          <span class="dl-body"><b>AI-JS.md</b><span>p5.js &amp; vanilla web — read live FIELD values</span></span>
+        </a>
+        <a class="dl" href="AI-PLUGINS.md" download>
+          <span class="dl-ic"><svg class="ic"><use href="#i-plug"/></svg></span>
+          <span class="dl-body"><b>AI-PLUGINS.md</b><span>Hardware plugin format — teach FIELD a new chip</span></span>
+        </a>
+      </div>
+      <p class="r">Prefer to read the plugin format yourself first, step by step? See the <a href="plugins.html">human-readable plugin guide</a> — it walks through the exact same spec with a worked example of its own.</p>
+    </div>
+  </section>
+
+  <!-- 8 · WHERE NEXT -->
+  <section class="fold" data-i="8">
+    <div class="inner">
+      <span class="tag r"><svg class="ic"><use href="#i-flag"/></svg> You can build with an agent now</span>
+      <h1 class="r">One example, two specs, no build step.</h1>
+      <p class="lead r">An ESP32 sends a number, FIELD applies your Cue, a p5.js sketch draws it — and an AI agent can write either end for you once it has the right spec.</p>
+      <ul class="check r">
+        <li><svg class="ic"><use href="#i-check"/></svg> Wire a real sensor to a board and draw one Cue (Chapters 3–4).</li>
+        <li><svg class="ic"><use href="#i-check"/></svg> Hand an agent AI-JS.md and describe a sketch in one sentence.</li>
+        <li><svg class="ic"><use href="#i-check"/></svg> Hand an agent AI-PLUGINS.md and describe a sensor chip it doesn't know.</li>
+        <li><svg class="ic"><use href="#i-check"/></svg> Keep both specs open in your agent's context while you iterate — they're small on purpose.</li>
+      </ul>
+      <p class="r" style="margin-top:26px"><a href="learn.html">← Back to Your First FIELD</a> &nbsp;·&nbsp; <a href="plugins.html">Add a custom sensor</a> &nbsp;·&nbsp; <a href="index.html">FIELD home</a></p>
+    </div>
+  </section>
+
+</div>
+
+<!-- ── BOTTOM BACK / NEXT ── -->
+<div class="footbar">
+  <div class="track" id="track"></div>
+  <button class="nb back" id="backBtn"><svg class="ic"><use href="#i-arrowL"/></svg> Back</button>
+  <span class="pos">Chapter <b id="posNum">1</b> / <span id="posTot">9</span></span>
+  <button class="nb next" id="nextBtn">Next <svg class="ic"><use href="#i-arrowR"/></svg></button>
+</div>
+
+<script>
+(function () {
+  var KEY = 'field_ai_coding_v1';
+  var folds = Array.prototype.slice.call(document.querySelectorAll('.fold'));
+  var total = folds.length;
+  var titles = [
+    ['i-bot','Welcome'], ['i-shapes','Two specs'], ['i-cpu','The example'],
+    ['i-cpu','ESP32 side'], ['i-shapes','Draw the Cue'], ['i-file','p5.js side'],
+    ['i-bot','Using the agent'], ['i-download','Get the specs'], ['i-flag','Where next']
+  ];
+
+  var menu = document.getElementById('menu');
+  var menuBtn = document.getElementById('menuBtn');
+  var jumpNav = document.getElementById('jumpNav');
+  var visited = {};
+  try { visited = JSON.parse(localStorage.getItem(KEY + '_visited') || '{}'); } catch (e) {}
+  titles.forEach(function (t, i) {
+    var b = document.createElement('button');
+    b.className = 'jump'; b.dataset.i = i;
+    b.innerHTML = '<span class="num">' + (i + 1) + '</span><svg class="ic"><use href="#' + t[0] + '"/></svg><span>' + t[1] + '</span><svg class="ic tick"><use href="#i-check"/></svg>';
+    b.addEventListener('click', function () { go(i); menu.classList.remove('open'); });
+    jumpNav.appendChild(b);
+  });
+  var jumps = Array.prototype.slice.call(jumpNav.children);
+  menuBtn.addEventListener('click', function () {
+    var open = menu.classList.toggle('open');
+    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  document.addEventListener('click', function (e) { if (!menu.contains(e.target)) menu.classList.remove('open'); });
+
+  var backBtn = document.getElementById('backBtn');
+  var nextBtn = document.getElementById('nextBtn');
+  var posNum = document.getElementById('posNum');
+  var track = document.getElementById('track');
+  document.getElementById('posTot').textContent = total;
+
+  function go(i) { if (i < 0) i = 0; if (i > total - 1) i = total - 1; folds[i].scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+
+  var current = -1;
+  function setActive(i) {
+    if (i === current) return;
+    current = i; visited[i] = 1;
+    folds.forEach(function (f, k) { f.classList.toggle('active', k === i); if (k === i) reveal(f); });
+    jumps.forEach(function (n, k) { n.classList.toggle('active', k === i); n.classList.toggle('done', !!visited[k] && k !== i); });
+    posNum.textContent = i + 1;
+    track.style.width = ((i + 1) / total * 100) + '%';
+    backBtn.disabled = i === 0; nextBtn.disabled = i === total - 1;
+    localStorage.setItem(KEY, i); localStorage.setItem(KEY + '_visited', JSON.stringify(visited));
+  }
+  function reveal(fold) {
+    if (fold.classList.contains('seen')) return;
+    fold.querySelectorAll('.r').forEach(function (el, idx) { el.style.transitionDelay = (idx * 65) + 'ms'; });
+    fold.classList.add('seen');
+  }
+
+  backBtn.addEventListener('click', function () { go(current - 1); });
+  nextBtn.addEventListener('click', function () { go(current + 1); });
+
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { if (e.isIntersecting) setActive(folds.indexOf(e.target)); });
+  }, { rootMargin: '-45% 0px -45% 0px', threshold: 0 });
+  folds.forEach(function (f) { io.observe(f); });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.altKey && e.key === 'ArrowDown') { e.preventDefault(); go(current + 1); }
+    if (e.altKey && e.key === 'ArrowUp') { e.preventDefault(); go(current - 1); }
+  });
+
+  var saved = parseInt(localStorage.getItem(KEY), 10);
+  if (!isNaN(saved) && saved > 0 && saved < total) {
+    setTimeout(function () { go(saved); }, 450);
+  } else {
+    reveal(folds[0]); folds[0].classList.add('active'); jumps[0].classList.add('active');
+    backBtn.disabled = true; track.style.width = (1 / total * 100) + '%';
+  }
+})();
+</script>
+<script>
+(function () {
+  function stipple(pathFn, count, box) {
+    var pts = [], tries = 0;
+    while (pts.length < count && tries < count * 30) {
+      tries++;
+      var x = box.x + Math.random() * box.w, y = box.y + Math.random() * box.h;
+      if (pathFn(x, y)) pts.push([x, y]);
+    }
+    return pts;
+  }
+  function sign(x1, y1, x2, y2, x3, y3) { return (x1 - x3) * (y2 - y3) - (x2 - x3) * (y1 - y3); }
+  var SHAPES = {
+    arrow: function (w, h) {
+      var pts = [];
+      var shaft = { x: w * 0.1, y: h * 0.42, w: w * 0.5, h: h * 0.16 };
+      pts = pts.concat(stipple(function (x, y) { return x >= shaft.x && x <= shaft.x + shaft.w && y >= shaft.y && y <= shaft.y + shaft.h; }, 40, shaft));
+      var ax = w * 0.55, ay = h * 0.18, bx = w * 0.55, by = h * 0.82, cx = w * 0.92, cy = h * 0.5;
+      var head = { x: w * 0.55, y: h * 0.18, w: w * 0.36, h: h * 0.64 };
+      pts = pts.concat(stipple(function (x, y) {
+        var d1 = sign(x, y, ax, ay, bx, by), d2 = sign(x, y, bx, by, cx, cy), d3 = sign(x, y, cx, cy, ax, ay);
+        var hasNeg = (d1 < 0) || (d2 < 0) || (d3 < 0), hasPos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+        return !(hasNeg && hasPos);
+      }, 32, head));
+      return pts;
+    }
+  };
+  var glyphs = document.querySelectorAll('canvas.glyph');
+  for (var i = 0; i < glyphs.length; i++) {
+    var cv = glyphs[i];
+    var dpr = window.devicePixelRatio || 1;
+    var w = cv.width, h = cv.height;
+    cv.width = w * dpr; cv.height = h * dpr;
+    cv.style.width = w + 'px'; cv.style.height = h + 'px';
+    var ctx = cv.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var fn = SHAPES[cv.getAttribute('data-shape')];
+    if (!fn) continue;
+    var pts = fn(w, h);
+    var color = getComputedStyle(document.body).getPropertyValue('--ink') || '#111';
+    ctx.fillStyle = color.trim() || '#111';
+    for (var j = 0; j < pts.length; j++) {
+      ctx.beginPath();
+      ctx.arc(pts[j][0], pts[j][1], 1.05, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+})();
+</script>
+</body>
+</html>

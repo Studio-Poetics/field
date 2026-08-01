@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Your First FIELD — a beginner's guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* ─────────────────────────────────────────────────────────────
+     Warm paper + muted pine. No sidebar. A single reading column,
+     a thin Back/Next at the bottom, and a chapter menu that drops
+     from a button in the top-right corner. Copy follows FSTL
+     (FIELD Simple Technical Language). Self-contained + offline.
+     ───────────────────────────────────────────────────────────── */
+
+  :root {
+    --paper:      #faf9f6;
+    --paper-2:    #f2f0ea;
+    --card:       #ffffff;
+    --ink:        #111111;
+    --muted:      #666666;
+    --faint:      #999999;
+    --line:       #111111;
+
+    --accent:     #7c3aed;
+    --accent-ink: #6d28d9;
+    --accent-soft:#ede9fe;
+    --accent-line:#7c3aed;
+    --accent2:      #c2410c;
+    --accent2-soft: #fdece1;
+
+    --code-bg:    #111111;
+    --code-ink:   #f2f0ea;
+    --code-dim:   #999999;
+    --code-key:   #cfcac0;
+
+    --sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --serif: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+    --mono: 'DM Mono', ui-monospace, "SF Mono", monospace;
+
+    --bar-h: 58px;
+    --col: 680px;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 30px; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 19px;
+    line-height: 1.72;
+    -webkit-font-smoothing: antialiased;
+    padding-bottom: var(--bar-h);
+  }
+
+  .ic { width: 1.1em; height: 1.1em; stroke: currentColor; fill: none;
+        stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round;
+        vertical-align: -0.16em; flex: none; }
+
+  /* ── top-right chapter menu (drops down on hover / focus / tap) ── */
+  .menu { position: fixed; top: 18px; right: 22px; z-index: 60; }
+  .menu-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--card); color: var(--ink);
+    border: 2px solid var(--line); border-radius: 0;
+    padding: 9px 15px; font: inherit; font-size: 0.82rem; cursor: pointer;
+    box-shadow: 3px 3px 0 var(--line);
+  }
+  .menu-btn .lbl { font-family: var(--mono); letter-spacing: 0.05em; }
+  .menu-btn .caret { transition: transform .25s ease; color: var(--faint); }
+  .menu:hover .menu-btn .caret, .menu.open .menu-btn .caret { transform: rotate(180deg); }
+
+  .menu-panel {
+    position: absolute; top: calc(100% + 10px); right: 0;
+    width: 288px; max-height: 76vh; overflow-y: auto;
+    background: var(--card); border: 2px solid var(--line);
+    border-radius: 0; padding: 8px;
+    box-shadow: 6px 6px 0 var(--line);
+    opacity: 0; transform: translateY(-12px) scale(.98);
+    transform-origin: top right; pointer-events: none;
+    transition: opacity .26s ease, transform .3s cubic-bezier(.2,.8,.25,1);
+  }
+  .menu:hover .menu-panel, .menu:focus-within .menu-panel, .menu.open .menu-panel {
+    opacity: 1; transform: none; pointer-events: auto;
+  }
+  .menu-panel .cap { font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); padding: 10px 12px 6px; }
+  .menu-panel button.jump {
+    display: flex; align-items: center; gap: 11px; width: 100%; text-align: left;
+    background: none; border: none; border-radius: 0; cursor: pointer;
+    padding: 9px 12px; font: inherit; font-size: 0.9rem; color: var(--muted); line-height: 1.3;
+  }
+  .menu-panel button.jump:hover { background: var(--paper-2); color: var(--ink); }
+  .menu-panel button.jump.active { background: var(--accent); color: #fff; }
+  .menu-panel button.jump.active .num { color: rgba(255,255,255,.7); }
+  .menu-panel button.jump .num { font-family: var(--mono); font-size: 0.72rem; color: var(--faint); width: 16px; flex: none; }
+  .menu-panel button.jump .ic { color: inherit; }
+  .menu-panel button.jump .tick { margin-left: auto; opacity: 0; color: var(--accent); width: 15px; height: 15px; }
+  .menu-panel button.jump.done .tick { opacity: 1; }
+  .menu-panel button.jump.active .tick { color: #fff; }
+
+  /* ── reading column + folds ── */
+  .stage { max-width: var(--col); margin: 0 auto; padding: 0 26px; }
+  .fold {
+    min-height: 78vh;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 64px 0 40px;
+    opacity: 0.42; transition: opacity .6s ease;
+  }
+  .fold.active { opacity: 1; }
+  .fold + .fold { border-top: 2px solid var(--line); }
+  .fold .inner { width: 100%; }
+  .r { opacity: 0; transform: translateY(16px); transition: opacity .6s ease, transform .6s ease; }
+  .fold.seen .r { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { .fold { opacity: 1; } .r { opacity: 1; transform: none; } }
+
+  .scrollcue { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: 40px; color: var(--faint); font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.14em; text-transform: uppercase; }
+  .scrollcue svg { animation: bob 1.9s ease-in-out infinite; }
+  @keyframes bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(5px)} }
+
+  /* ── typography ── */
+  .tag { display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.13em; text-transform: uppercase; color: var(--accent-ink); background: var(--accent-soft); border: 2px solid var(--accent-line); border-radius: 0; padding: 5px 13px; margin-bottom: 22px; }
+  h1 { font-family: var(--serif); font-weight: 700; font-size: clamp(2rem, 5vw, 2.9rem); line-height: 0.98; letter-spacing: -0.03em; text-transform: uppercase; margin: 0 0 18px; }
+  h2 { font-family: var(--serif); font-weight: 700; font-size: 1.5rem; letter-spacing: -0.02em; text-transform: uppercase; margin: 34px 0 10px; }
+  h3 { font-size: 1.06rem; margin: 22px 0 8px; }
+  p { margin: 0 0 16px; color: var(--muted); }
+  p.lead { font-size: 1.18rem; color: var(--ink); }
+  .fold p.lead:first-of-type { font-family: var(--serif); font-weight: 500; }
+  strong { color: var(--ink); font-weight: 640; }
+  em { color: var(--ink); }
+  a { color: var(--accent-ink); text-underline-offset: 3px; }
+  ul, ol { color: var(--muted); padding-left: 1.2em; }
+  li { margin: 6px 0; }
+
+  /* steps — one action each */
+  .steps { list-style: none; counter-reset: s; padding: 0; margin: 22px 0; }
+  .steps > li { counter-increment: s; position: relative; padding: 16px 18px 16px 58px; background: var(--card); border: 2px solid var(--line); border-radius: 0; margin: 10px 0; }
+  .steps > li::before { content: counter(s); position: absolute; left: 16px; top: 15px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 0.82rem; color: #fff; background: var(--accent); border-radius: 0; }
+  .steps > li .act { color: var(--ink); font-weight: 560; display: block; }
+  .steps > li .see { display: flex; align-items: baseline; gap: 7px; margin-top: 6px; font-size: 0.92rem; color: var(--muted); }
+  .steps > li .see b { color: var(--accent-ink); font-weight: 600; font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; flex: none; }
+
+  .note { border-radius: 0; padding: 15px 19px; margin: 18px 0; font-size: 0.96rem; }
+  .note .lbl { display: flex; align-items: center; gap: 7px; font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+  .note p { color: var(--ink); margin: 0; }
+  .note p + p { margin-top: 8px; }
+  .note.why { background: var(--card); border: 2px solid var(--line); }
+  .note.why .lbl { color: var(--accent-ink); }
+  .note.diary { background: var(--accent-soft); border: 2px solid var(--accent-line); }
+  .note.diary .lbl { color: var(--accent-ink); }
+  .note.fix { background: #fbf6ec; border: 1px solid #ecdcb8; }
+  .note.fix .lbl { color: #8a6d1e; }
+  .note.fix ul { margin: 4px 0 0; color: var(--ink); }
+  .note.fix li { margin: 4px 0; }
+
+  .flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 8px; margin: 24px 0; font-family: var(--mono); font-size: 0.78rem; }
+  .flow .box { background: var(--card); border: 2px solid var(--line); border-radius: 0; padding: 13px 15px; flex: 1 1 130px; text-align: center; }
+  .flow .box small { display: block; color: var(--faint); text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.62rem; margin-bottom: 4px; }
+  .flow .box b { color: var(--ink); font-weight: 620; }
+  .flow .arrow { align-self: center; color: var(--accent); flex: none; }
+
+  .concepts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 22px; }
+  .concept { background: var(--card); border: 2px solid var(--line); border-top: 3px solid var(--accent); border-radius: 0; padding: 16px 18px; }
+  .concept:nth-of-type(2n) { border-top-color: var(--accent2); }
+  .concept:nth-of-type(2n) .word { color: var(--accent2); }
+  .concept .word { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-ink); }
+  .glyph { width: 40px; height: 40px; flex-shrink: 0; }
+  .concept h3 { margin: 6px 0 5px; font-size: 1.1rem; }
+  .concept p { margin: 0; font-size: 0.92rem; }
+
+  .exs { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 22px; }
+  .ex { background: var(--card); border: 2px solid var(--line); border-radius: 0; padding: 17px 19px; }
+  .ex-top { display: flex; align-items: center; gap: 11px; margin-bottom: 8px; }
+  .ex-ic { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; flex: none; background: var(--accent-soft); color: var(--accent-ink); border-radius: 0; }
+  .ex-ic .ic { width: 21px; height: 21px; }
+  .ex-top h3 { margin: 0; font-size: 1.02rem; }
+  .ex-diff { margin-left: auto; font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); border: 2px solid var(--line); border-radius: 0; padding: 3px 9px; }
+  .ex-diff.easy { color: var(--accent-ink); border-color: var(--accent-line); background: var(--accent-soft); }
+  .ex > p { font-size: 0.91rem; margin-bottom: 12px; }
+  .ex-recipe { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.03em; background: var(--paper); border: 2px solid var(--line); border-radius: 0; padding: 3px 9px; color: var(--muted); }
+  .chip b { color: var(--accent-ink); font-weight: 600; }
+
+  .filename { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.04em; color: var(--faint); margin: 18px 0 -8px; }
+  pre { background: var(--code-bg); color: var(--code-ink); border-radius: 0; padding: 17px 19px; overflow-x: auto; font-family: var(--mono); font-size: 0.84rem; line-height: 1.62; margin: 16px 0; }
+  pre .c { color: var(--code-dim); }
+  pre .k { color: var(--code-key); }
+  code { font-family: var(--mono); font-size: 0.85em; background: var(--paper-2); border: 2px solid var(--line); border-radius: 0; padding: 1px 6px; }
+  pre code { background: none; border: none; padding: 0; font-size: 1em; }
+
+  .check { list-style: none; padding: 0; margin: 18px 0; }
+  .check li { padding-left: 30px; position: relative; margin: 10px 0; color: var(--ink); }
+  .check li svg { position: absolute; left: 0; top: 4px; color: var(--accent); }
+
+  /* ── name + pronoun gate ── */
+  .idcard { background: var(--card); border: 2px solid var(--line); border-radius: 0; padding: 26px 28px; margin-top: 24px; max-width: 500px; }
+  .idcard label.field { display: block; font-size: 0.92rem; color: var(--ink); font-weight: 620; margin-bottom: 9px; }
+  .idcard input[type=text] { width: 100%; font: inherit; font-size: 1.05rem; padding: 12px 14px; border: 2px solid var(--line); border-radius: 0; background: var(--paper); color: var(--ink); }
+  .idcard input[type=text]:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .idcard .sub { font-size: 0.88rem; color: var(--muted); margin: 20px 0 9px; }
+  .prons { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pron { font: inherit; font-size: 0.9rem; cursor: pointer; background: var(--paper); border: 2px solid var(--line); border-radius: 0; padding: 9px 16px; color: var(--muted); }
+  .pron:hover { border-color: var(--accent-line); }
+  .pron.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .idcard .go { margin-top: 22px; display: inline-flex; align-items: center; gap: 8px; font: inherit; font-size: 1rem; font-weight: 600; background: var(--accent); border: 1px solid var(--accent); color: #fff; border-radius: 0; padding: 12px 22px; cursor: pointer; }
+  .idcard .go:hover { background: var(--accent-ink); }
+  .idcard .go.ghost { background: var(--card); color: var(--accent-ink); }
+  .idcard .privacy { display: flex; align-items: flex-start; gap: 6px; font-size: 0.79rem; color: var(--faint); margin: 15px 0 0; }
+  .welcomeback { display: none; }
+
+  /* ── bottom Back / Next ── */
+  .footbar {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; height: var(--bar-h);
+    display: flex; align-items: center; gap: 16px;
+    background: rgba(247,243,234,0.9); backdrop-filter: blur(9px);
+    border-top: 2px solid var(--line); padding: 0 22px;
+  }
+  .footbar .nb { display: inline-flex; align-items: center; gap: 8px; background: none; border: none; cursor: pointer; font: inherit; font-size: 0.9rem; color: var(--ink); padding: 8px 6px; border-radius: 0; }
+  .footbar .nb:disabled { color: var(--faint); cursor: default; }
+  .footbar .nb.next { margin-left: auto; color: var(--accent-ink); font-weight: 600; }
+  .footbar .nb:not(:disabled):hover { color: var(--accent-ink); }
+  .footbar .pos { position: absolute; left: 50%; transform: translateX(-50%); font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.06em; color: var(--faint); }
+  .footbar .pos b { color: var(--accent-ink); }
+  .footbar .track { position: absolute; top: -1px; left: 0; height: 2px; background: var(--accent); transition: width .4s ease; }
+
+  @media (max-width: 720px) {
+    body { font-size: 18px; }
+    .concepts, .exs { grid-template-columns: 1fr; }
+    .footbar .pos { display: none; }
+    .menu { top: 14px; right: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── ICON SPRITE ── -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></symbol>
+  <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></symbol>
+  <symbol id="i-shapes" viewBox="0 0 24 24"><path d="M8.3 10a.7.7 0 0 1-.626-1.079L11.4 3a.7.7 0 0 1 1.198 0l3.726 5.921A.7.7 0 0 1 15.7 10Z"/><rect x="3" y="14" width="7" height="7" rx="1"/><circle cx="17.5" cy="17.5" r="3.5"/></symbol>
+  <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5.76.76 1.23 1.52 1.41 2.5"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></symbol>
+  <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/></symbol>
+  <symbol id="i-trend" viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+  <symbol id="i-chevD" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></symbol>
+  <symbol id="i-arrowR" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></symbol>
+  <symbol id="i-arrowL" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="12" y1="8" x2="12.01" y2="8"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+  <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6"/></symbol>
+  <symbol id="i-door" viewBox="0 0 24 24"><path d="M13 4h3a2 2 0 0 1 2 2v14"/><path d="M2 20h20M13 20V4.5a1 1 0 0 0-1.2-.98l-4 1A1 1 0 0 0 7 5.5V20"/><path d="M10 12v.01"/></symbol>
+  <symbol id="i-brush" viewBox="0 0 24 24"><path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08"/><path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-3-3.02z"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+  <symbol id="i-wind" viewBox="0 0 24 24"><path d="M12.8 19.6A2 2 0 1 0 14 16H2"/><path d="M17.5 8a2.5 2.5 0 1 1 2 4H2"/><path d="M9.8 4.4A2 2 0 1 1 11 8H2"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></symbol>
+  <symbol id="i-hand" viewBox="0 0 24 24"><path d="M18 11V6a2 2 0 0 0-4 0v5M14 10V4a2 2 0 0 0-4 0v6M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></symbol>
+</defs></svg>
+
+<!-- ── CHAPTER MENU (drops from top-right) ── -->
+<div class="menu" id="menu">
+  <button class="menu-btn" id="menuBtn" aria-haspopup="true" aria-expanded="false">
+    <svg class="ic"><use href="#i-list"/></svg>
+    <span class="lbl">Chapters</span>
+    <svg class="ic caret"><use href="#i-chevD"/></svg>
+  </button>
+  <div class="menu-panel" id="menuPanel">
+    <div class="cap">Jump to a chapter</div>
+    <nav id="jumpNav"></nav>
+  </div>
+</div>
+
+<div class="stage">
+
+  <!-- 0 · WELCOME + IDENTITY -->
+  <section class="fold" data-i="0">
+    <div class="inner">
+      <span class="tag r"><svg class="ic"><use href="#i-compass"/></svg> Start here</span>
+      <h1 class="r">Let's build your first FIELD.</h1>
+      <p class="lead r">You do not need to know how to code. You need one idea and about two hours.</p>
+      <p class="r">First, tell me your name. Then this guide talks to you, not at you.</p>
+
+      <div class="idcard r" id="idForm">
+        <label class="field" for="nameInput">What should I call you?</label>
+        <input type="text" id="nameInput" placeholder="Your name or nickname" autocomplete="given-name" />
+        <p class="sub">Which words fit you? I use them when I cheer you on.</p>
+        <div class="prons" id="prons">
+          <button class="pron on" data-p="they">they / them</button>
+          <button class="pron" data-p="she">she / her</button>
+          <button class="pron" data-p="he">he / him</button>
+        </div>
+        <button class="go" id="startBtn">Start <svg class="ic"><use href="#i-arrowR"/></svg></button>
+        <p class="privacy"><svg class="ic" style="width:14px;height:14px"><use href="#i-info"/></svg> This stays in your browser. Nothing is sent anywhere.</p>
+      </div>
+
+      <div class="idcard r welcomeback" id="idBack">
+        <label class="field"><svg class="ic" style="color:var(--accent-ink)"><use href="#i-user"/></svg> Welcome back, <span class="uName">friend</span>.</label>
+        <p class="sub" style="margin-top:6px">Continue where you stopped?</p>
+        <button class="go" id="resumeBtn">Continue <svg class="ic"><use href="#i-arrowR"/></svg></button>
+        <button class="go ghost" id="notMeBtn" style="margin-left:8px">Not me</button>
+      </div>
+
+      <div class="note why r" style="margin-top:26px"><span class="lbl"><svg class="ic"><use href="#i-info"/></svg> Before you start · what you need</span>
+        <p>1. The <strong>FIELD app</strong>, installed on your computer.<br>
+           2. A <strong>phone</strong>, for the first build.<br>
+           3. Your phone and your computer on the <strong>same Wi-Fi</strong>.</p></div>
+
+      <div class="scrollcue r"><svg class="ic"><use href="#i-chevD"/></svg> scroll · or use back / next below</div>
+    </div>
+  </section>
+
+  <!-- 1 · DIARY -->
+  <section class="fold" data-i="1">
+    <div class="inner">
+      <span class="tag r"><svg class="ic"><use href="#i-pencil"/></svg> Step zero</span>
+      <h1 class="r"><span class="uName">Friend</span>, get a notebook first.</h1>
+      <p class="lead r">A real paper notebook, or one open text file. This is the most useful habit in the guide.</p>
+      <p class="r">Making things starts with <strong>noticing</strong>. You notice what annoys you. You notice what you wish existed. These thoughts leave your head in seconds. Write them down and they stay.</p>
+      <p class="r">So keep a maker's diary. It is where small ideas grow up. Your own projects come from these pages — not from copying mine.</p>
+      <div class="note diary r"><span class="lbl"><svg class="ic"><use href="#i-pencil"/></svg> <span class="uName">Friend</span>'s diary — write this now</span>
+        <p>Finish these three lines. Short answers are fine.</p>
+        <p>1. One thing in my room I wish could <strong>react</strong> to me: ______<br>
+           2. One moment in my day I want to <strong>mark</strong>: ______<br>
+           3. One thing I would want an object to <strong>notice</strong> about me: ______</p></div>
+      <p class="r">Every green <strong>diary</strong> box means stop and write. Two lines is enough. By the end you will have pages of raw material.</p>
+    </div>
+  </section>
+
+  <!-- 2 · WHAT IS FIELD -->
+  <section class="fold" data-i="2">
+    <div class="inner">
+      <span class="tag r"><svg class="ic"><use href="#i-layers"/></svg> What FIELD is</span>
+      <h1 class="r">FIELD connects the real world to the screen.</h1>
+      <p class="r">FIELD is an app on your computer. It shows an empty <strong>canvas</strong>. A canvas is a blank space you build on.</p>
+      <p class="r">You place <strong>things</strong> on the canvas — a plant, a door, your phone, a lamp. You draw a <strong>line</strong> between two things. The line carries a <strong>rule</strong>. Example: <em>when the room gets louder, make the light brighter.</em></p>
+      <p class="r">One end of the line is the real world. It sends a signal, like a tilt or a sound. The other end is something that changes, like a shape or a light. FIELD sits in the middle. It reads the signal and applies the rule. The result updates live, as you move.</p>
+      <div class="flow r">
+        <div class="box"><small>the world</small><b>you move or speak</b></div>
+        <div class="arrow"><svg class="ic" style="width:22px;height:22px"><use href="#i-arrowR"/></svg></div>
+        <div class="box"><small>FIELD</small><b>your rule</b></div>
+        <div class="arrow"><svg class="ic" style="width:22px;height:22px"><use href="#i-arrowR"/></svg></div>
+        <div class="box"><small>the result</small><b>screen · light · sound</b></div>
+      </div>
+      <div class="note why r"><span class="lbl"><svg class="ic"><use href="#i-info"/></svg> Why this matters</span>
+        <p>Everything runs on <span class="uName">your</span> computer. No cloud. No account. No internet needed. Your phone talks to FIELD over your own Wi-Fi. It is yours.</p></div>
+    </div>
+  </section>
+
+  <!-- 3 · FOUR WORDS -->
+  <section class="fold" data-i="3">
+    <div class="inner">
+      <span class="tag r"><svg class="ic"><use href="#i-shapes"/></svg> Four words</span>
+      <h1 class="r">Learn four words. Then you can describe almost anything.</h1>
+      <p class="r">FIELD borrows its words from the theatre. A play is also things reacting to each other on a stage. Read each word before you use it.</p>
+      <div class="concepts r">
+        <div class="concept"><span class="word"><canvas class="glyph" data-shape="square" width="40" height="40"></canvas> Actor</span><h3>A thing in your world</h3><p>A plant, a door, your phone. An Actor can sense, and it can react.</p></div>
+        <div class="concept"><span class="word"><canvas class="glyph" data-shape="circle" width="40" height="40"></canvas> Role</span><h3>One sense or one reaction</h3><p>An input role is a sense: <em>tilt, touch, sound.</em> An output role is a reaction: <em>show, move, glow, speak.</em></p></div>
+        <div class="concept"><span class="word"><canvas class="glyph" data-shape="arrow" width="40" height="40"></canvas> Cue</span><h3>The line you draw</h3><p>A Cue joins one Actor's sense to another Actor's reaction. "When the phone tilts, move the circle."</p></div>
+        <div class="concept"><span class="word"><canvas class="glyph" data-shape="triangle" width="40" height="40"></canvas> Mechanism</span><h3>The rule inside the line</h3><p>You pick one rule. A <em>switch</em> is on or off. A <em>dial</em> follows smoothly. A <em>latch</em> stays on.</p></div>
+      </div>
+      <div class="note why r"><span class="lbl"><svg class="ic"><use href="#i-info"/></svg> One number to remember</span>
+        <p>Every value in FIELD is between <strong>0 and 1</strong>. Quiet is 0. Loud is 1. Phone flat-left is 0. Phone upright is 0.5. Phone flat-right is 1. Every sensor and every reaction use this same 0-to-1 language.</p></div>
+      <div class="note diary r"><span class="lbl"><svg class="ic"><use href="#i-pencil"/></svg> Diary — use the four words</span>
+        <p>Take idea 1 from your notebook. Write it again with the words: <em>Actor:</em> ______ · <em>senses:</em> ______ · <em>reacts:</em> ______ · <em>Cue:</em> "When ______, then ______."</p></div>
+    </div>
+  </section>
+
+  <!-- 4 · IDEAS -->
+  <section class="fold" data-i="4">
+    <div class="inner">
+      <span class="tag r"><svg class="ic"><use href="#i-bulb"/></svg> Eight ideas to build</span>
+      <h1 class="r">Not sure what to make? Start from one of these.</h1>
+      <p class="r">A blank page is hard. So do not start blank. Each idea below is small and real. People build these in an afternoon. Small and finished beats big and unfinished.</p>
+      <p class="r">Each card shows its recipe: a <span class="chip"><b>sense</b></span> plus a <span class="chip"><b>reaction</b></span> plus a <span class="chip"><b>mechanism</b></span>.</p>
+      <div class="exs r">
+        <div class="ex"><div class="ex-top"><span class="ex-ic"><svg class="ic"><use href="#i-leaf"/></svg></span><h3>The honest plant</h3><span class="ex-diff easy">Easiest</span></div><p>A light sensor on your plant. A dark room shows a sad face. A bright room shows a happy one.</p><div class="ex-recipe"><span class="chip"><b>LIGHT</b></span><span class="chip"><b>SHOW</b></span><span class="chip">SWITCH</span></div></div>
+        <div class="ex"><div class="ex-top"><span class="ex-ic"><svg class="ic"><use href="#i-door"/></svg></span><h3>Door announcer</h3><span class="ex-diff easy">Easy</span></div><p>A presence sensor by the door. Someone walks up. FIELD says "hello".</p><div class="ex-recipe"><span class="chip"><b>PRESENCE</b></span><span class="chip"><b>SPEAK</b></span><span class="chip">LATCH</span></div></div>
+        <div class="ex"><div class="ex-top"><span class="ex-ic"><svg class="ic"><use href="#i-brush"/></svg></span><h3>Tilt painter</h3><span class="ex-diff easy">Easy</span></div><p>Tilt your phone to slide a brush and paint. Your hand is the mouse. <strong>You build this next.</strong></p><div class="ex-recipe"><span class="chip"><b>TILT</b></span><span class="chip"><b>MOVE</b></span><span class="chip">DIAL</span></div></div>
+        <div class="ex"><div class="ex-top"><span class="ex-ic"><svg class="ic"><use href="#i-bell"/></svg></span><h3>Focus bell</h3><span class="ex-diff easy">Easy</span></div><p>A sound sensor on your desk. The room gets loud. A red bar fills up. A quiet "shhh".</p><div class="ex-recipe"><span class="chip"><b>SOUND</b></span><span class="chip"><b>GLOW</b></span><span class="chip">DIAL</span></div></div>
+        <div class="ex"><div class="ex-top"><span class="ex-ic"><svg class="ic"><use href="#i-wind"/></svg></span><h3>Breathing circle</h3><span class="ex-diff easy">Easy</span></div><p>Drag a slider slowly. A circle grows and shrinks. A calm breathing pacer.</p><div class="ex-recipe"><span class="chip"><b>SLIDER</b></span><span class="chip"><b>MOVE</b></span><span class="chip">DIAL</span></div></div>
+        <div class="ex"><div class="ex-top"><span class="ex-ic"><svg class="ic"><use href="#i-mail"/></svg></span><h3>Shake to reveal</h3><span class="ex-diff">Medium</span></div><p>Shake your phone. A hidden message fades in, then out. A small piece of magic.</p><div class="ex-recipe"><span class="chip"><b>SHAKE</b></span><span class="chip"><b>SHOW</b></span><span class="chip">LATCH</span></div></div>
+        <div class="ex"><div class="ex-top"><span class="ex-ic"><svg class="ic"><use href="#i-sun"/></svg></span><h3>Mood lamp</h3><span class="ex-diff">Medium</span></div><p>Wave your hand near a light sensor. A glowing panel dims or brightens. A lamp with no switch.</p><div class="ex-recipe"><span class="chip"><b>LIGHT</b></span><span class="chip"><b>GLOW</b></span><span class="chip">DIAL</span></div></div>
+        <div class="ex"><div class="ex-top"><span class="ex-ic"><svg class="ic"><use href="#i-music"/></svg></span><h3>Voice-reactive visuals</h3><span class="ex-diff">Medium</span></div><p>Sing or talk. A sketch pulses with your voice. Circles bloom on the loud parts.</p><div class="ex-recipe"><span class="chip"><b>SOUND</b></span><span class="chip"><b>MOVE</b></span><span class="chip">DIAL</span></div></div>
+      </div>
+      <div class="note diary r"><span class="lbl"><svg class="ic"><use href="#i-pencil"/></svg> Diary — pick one</span>
+        <p><span class="uName">Friend</span>, copy one idea into your notebook. Or write your own in the same shape: <em>a sense</em> + <em>a reaction</em> + <em>why it would make you smile</em>. Circle the one you will build.</p></div>
+    </div>
+  </section>
+
+  <!-- 5 · BUILD PHONE -->
+  <section class="fold" data-i="5">
+    <div class="inner">
+      <span class="tag r"><svg class="ic"><use href="#i-phone"/></svg> Build one · phone</span>
+      <h1 class="r">Move a circle by tilting your phone.</h1>
+      <p class="lead r">No wires. No hardware yet. Just FIELD, your computer, and your phone.</p>
+      <p class="r">Here is the result you are building: you tilt your phone, and a green circle slides left and right on the screen. Now the steps. Do one at a time.</p>
+      <ol class="steps r">
+        <li><span class="act">Open the FIELD app on your computer.</span><span class="see"><b>See</b> an empty canvas.</span></li>
+        <li><span class="act">Add one Actor. Name it <strong>Phone</strong>. Give it one input role: <strong>TILT</strong>.</span><span class="see"><b>See</b> the Phone Actor on the canvas.</span></li>
+        <li><span class="act">Find the sensor <strong>QR code</strong> in FIELD. Open the camera on your phone. Point it at the QR code. Tap the link.</span><span class="see"><b>See</b> a FIELD page open on your phone.</span></li>
+        <li><span class="act">Tilt your phone left and right.</span><span class="see"><b>See</b> the TILT value change between 0 and 1.</span></li>
+        <li><span class="act">Add a second Actor. Name it <strong>Screen</strong>. Give it one output role: <strong>MOVE</strong>.</span><span class="see"><b>See</b> two Actors now.</span></li>
+        <li><span class="act">Draw a <strong>Cue</strong> from Phone TILT to Screen MOVE. Pick the <strong>DIAL</strong> mechanism.</span><span class="see"><b>See</b> a line join the two Actors.</span></li>
+      </ol>
+      <div class="note fix r"><span class="lbl"><svg class="ic"><use href="#i-info"/></svg> If the value does not change</span>
+        <ul>
+          <li>Check that your phone and computer use the <strong>same Wi-Fi</strong>.</li>
+          <li>If your phone asks for "motion &amp; orientation" access, tap allow.</li>
+          <li>Reload the FIELD page on your phone.</li>
+        </ul></div>
+
+      <h2 class="r">Now draw with code.</h2>
+      <p class="r">You draw the circle with a <strong>p5 sketch</strong>. A sketch is a small program that draws on the screen. FIELD gives your sketch the live value through a helper named <code>field</code>.</p>
+      <div class="note why r"><span class="lbl"><svg class="ic"><use href="#i-info"/></svg> Read every line first</span>
+        <p>The code below has a comment on each line. Read it once before you paste it. Nothing is hidden.</p></div>
+      <p class="filename r">sketch.js</p>
+<pre class="r"><code><span class="c">// Make a drawing window, 400 by 400 pixels.</span>
+<span class="k">function</span> setup() {
+  createCanvas(400, 400);
+}
+
+<span class="c">// draw() runs many times per second.</span>
+<span class="k">function</span> draw() {
+  background(240);          <span class="c">// repaint the window pale grey</span>
+
+  <span class="c">// Ask FIELD for the tilt value: 0 to 1.</span>
+  <span class="k">let</span> tilt = field.get('MOVE');
+
+  <span class="c">// Turn 0-to-1 into a left-to-right position.</span>
+  <span class="k">let</span> x = tilt * 400;
+
+  <span class="c">// Draw the circle at that spot, halfway down.</span>
+  fill(47, 107, 92);        <span class="c">// pine green</span>
+  circle(x, 200, 60);       <span class="c">// x, y, size</span>
+}</code></pre>
+      <ol class="steps r">
+        <li><span class="act">Paste the code into the p5 panel in FIELD.</span><span class="see"><b>See</b> a green circle appear.</span></li>
+        <li><span class="act">Tilt your phone.</span><span class="see"><b>See</b> the circle slide with your hand.</span></li>
+      </ol>
+      <p class="r">You built a physical controller. Give the phone to someone near you. Watch <span class="uPO">them</span> try it.</p>
+      <div class="note diary r"><span class="lbl"><svg class="ic"><use href="#i-pencil"/></svg> Diary — one line</span><p>What surprised you about moving a circle with your hand? You get that first reaction only once.</p></div>
+    </div>
+  </section>
+
+  <!-- 6 · VERBOSE THEN LOOP -->
+  <section class="fold" data-i="6">
+    <div class="inner">
+      <span class="tag r"><svg class="ic"><use href="#i-trend"/></svg> Build one · make it richer</span>
+      <h1 class="r">Add a trail of ten circles.</h1>
+      <p class="r">Next you draw ten circles in a column. They follow your hand together, like a comet.</p>
+      <div class="note why r"><span class="lbl"><svg class="ic"><use href="#i-info"/></svg> Why write it the long way first</span>
+        <p>You write each circle by hand, one per line. This is long. But you can read exactly what every line does. Short code can hide what happens. Learn it clear, then make it short.</p></div>
+      <p class="filename r">sketch.js — write each circle by hand</p>
+<pre class="r"><code><span class="k">function</span> draw() {
+  background(240);
+  <span class="k">let</span> tilt = field.get('MOVE');
+  <span class="k">let</span> x = tilt * 400;
+  fill(47, 107, 92);
+
+  <span class="c">// Ten circles. Only the second number changes.</span>
+  circle(x, 40, 30);
+  circle(x, 80, 30);
+  circle(x, 120, 30);
+  circle(x, 160, 30);
+  circle(x, 200, 30);
+  circle(x, 240, 30);
+  circle(x, 280, 30);
+  circle(x, 320, 30);
+  circle(x, 360, 30);
+  circle(x, 400, 30);
+}</code></pre>
+      <ol class="steps r">
+        <li><span class="act">Paste the code. Tilt your phone.</span><span class="see"><b>See</b> a column of ten circles slide together.</span></li>
+      </ol>
+      <p class="r">This works. It is long, but it is clear. Ship it. Then improve it.</p>
+      <div class="note why r"><span class="lbl"><svg class="ic"><use href="#i-trend"/></svg> When you are ready · the loop</span>
+        <p>Look at the ten lines. Only the second number changes: 40, 80, 120, and so on. It steps by 40 each time.</p>
+        <p>A <strong>loop</strong> repeats a line for you. It does the same job in three lines:</p>
+<pre style="margin-top:12px"><code><span class="k">for</span> (<span class="k">let</span> y = 40; y &lt;= 400; y = y + 40) {
+  circle(x, y, 30);
+}</code></pre>
+        <p>Same picture. Less typing. To go from ten circles to twenty, you change one number. You do not have to use a loop yet. Just know this: when you copy a line and change one number, a loop can do it for you.</p></div>
+    </div>
+  </section>
+
+  <!-- 7 · HARDWARE -->
+  <section class="fold" data-i="7">
+    <div class="inner">
+      <span class="tag r"><svg class="ic"><use href="#i-cpu"/></svg> Build two · real hardware</span>
+      <h1 class="r">Now let a real sensor do the job.</h1>
+      <p class="lead r">Your sketch does not change. Only the source of the number changes.</p>
+      <p class="r">A <strong>microcontroller</strong> is a tiny computer on a board. You will use an <strong>Arduino</strong> or an <strong>ESP32</strong> board. You will wire a <strong>potentiometer</strong> to it. A potentiometer is a knob you turn. You turn the knob, and the circle moves — the same as tilting did.</p>
+      <div class="note why r"><span class="lbl"><svg class="ic"><use href="#i-info"/></svg> Why the sketch stays the same</span>
+        <p>The knob sends a number from 0 to 1. The phone sent a number from 0 to 1. Your sketch asks for a 0-to-1 number. It does not care where the number comes from. That is the whole trick.</p></div>
+      <ol class="steps r">
+        <li><span class="act">Wire the knob's middle pin to pin <strong>A0</strong> on the board. Wire the outer pins to power and ground.</span><span class="see"><b>See</b> the knob connected to the board.</span></li>
+        <li><span class="act">In FIELD, open the Phone Actor's TILT role. Set its <strong>pin</strong> to A0.</span><span class="see"><b>See</b> that TILT now reads from real hardware.</span></li>
+        <li><span class="act">Open the <strong>Get Code</strong> panel. FIELD writes the full program for the board.</span><span class="see"><b>See</b> the generated code. You write none of it.</span></li>
+      </ol>
+      <p class="r">Here is a peek at what the board sends to FIELD. It sends one short line at a time:</p>
+<pre class="r"><code><span class="c">// board → FIELD, as you turn the knob</span>
+{"role":"TILT","value":0.000}   <span class="c">// knob fully down</span>
+{"role":"TILT","value":0.512}   <span class="c">// halfway</span>
+{"role":"TILT","value":1.000}   <span class="c">// fully up</span></code></pre>
+      <p class="r">This is the same 0-to-1 language again. Now upload the code to the board.</p>
+      <ol class="steps r">
+        <li><span class="act">Plug the board into your computer with a USB cable.</span><span class="see"><b>See</b> the board's power light turn on.</span></li>
+        <li><span class="act">Open the <strong>Upload to board</strong> card in FIELD. Click <em>Set up one-click upload</em> once.</span><span class="see"><b>See</b> FIELD get ready. This step downloads a tool the first time.</span></li>
+        <li><span class="act">Pick your board and your port. Click <strong>Compile &amp; Upload</strong>.</span><span class="see"><b>See</b> the log stream. It ends with "done".</span></li>
+        <li><span class="act">Turn the knob.</span><span class="see"><b>See</b> the same circle move — now driven by hardware.</span></li>
+      </ol>
+      <div class="note fix r"><span class="lbl"><svg class="ic"><use href="#i-info"/></svg> If upload does not start</span>
+        <ul>
+          <li>One-click upload needs the FIELD desktop app, or Chrome / Edge.</li>
+          <li>Check the USB cable. Some cables only carry power, not data.</li>
+          <li>Pick the correct port. Unplug and replug to see which one appears.</li>
+        </ul></div>
+      <p class="r"><span class="uName">You</span> drove the same sketch from two worlds: your phone, and a chip you programmed. Remember the model: <strong>the sensor sends 0 to 1, and the sketch reacts.</strong></p>
+      <div class="note diary r"><span class="lbl"><svg class="ic"><use href="#i-pencil"/></svg> Diary — name the boundary</span><p>Write what stayed the same and what changed, from phone to hardware. Say it in your own words. Then it sticks.</p></div>
+    </div>
+  </section>
+
+  <!-- 8 · WHERE NEXT -->
+  <section class="fold" data-i="8">
+    <div class="inner">
+      <span class="tag r"><svg class="ic"><use href="#i-flag"/></svg> You are not a beginner anymore</span>
+      <h1 class="r"><span class="uName">Friend</span>, look at what you built.</h1>
+      <p class="lead r">A circle you move with your hand. A comet. A knob wired to a screen. That was all <span class="uPP">their</span> doing.</p>
+      <p class="r">You know the four words and the whole loop now. Everything next is a remix. Try a few this week:</p>
+      <ul class="check r">
+        <li><svg class="ic"><use href="#i-check"/></svg> Swap <strong>DIAL</strong> for <strong>SWITCH</strong>. The circle jumps between two spots. Feel what a mechanism does.</li>
+        <li><svg class="ic"><use href="#i-check"/></svg> Add a <strong>SOUND</strong> role and a second Cue. Change the circle's size with your voice.</li>
+        <li><svg class="ic"><use href="#i-check"/></svg> Add a <strong>Scene</strong>. Make a night version with different colours.</li>
+        <li><svg class="ic"><use href="#i-check"/></svg> Build the honest plant, the mood lamp, or shake-to-reveal. You have every piece.</li>
+        <li><svg class="ic"><use href="#i-check"/></svg> Read your diary. Pick the idea that still excites you. Build that next.</li>
+      </ul>
+      <div class="note diary r"><span class="lbl"><svg class="ic"><use href="#i-pencil"/></svg> Diary — the habit that matters most</span><p>End every session with two lines: what worked, and what you will try next. Do this for a month, <span class="uName">friend</span>. Then you have a record of yourself getting good. That is the real thing you are making.</p></div>
+      <div class="note why r"><span class="lbl"><svg class="ic"><use href="#i-cpu"/></svg> Ready for a second device?</span>
+        <p>Everything above used one Actor at a time. The next guide, <a href="connect.html"><strong>Connect Two Things</strong></a>, shows two phones talking directly, two boards talking over their own radio, and a phone and a board on one canvas together — then one project that uses all of it.</p></div>
+      <p class="r" style="margin-top:26px"><a href="index.html">← Back to FIELD</a> &nbsp;·&nbsp; <a href="connect.html">Next: Connect Two Things →</a></p>
+    </div>
+  </section>
+
+</div>
+
+<!-- ── BOTTOM BACK / NEXT ── -->
+<div class="footbar">
+  <div class="track" id="track"></div>
+  <button class="nb back" id="backBtn"><svg class="ic"><use href="#i-arrowL"/></svg> Back</button>
+  <span class="pos">Chapter <b id="posNum">1</b> / <span id="posTot">9</span></span>
+  <button class="nb next" id="nextBtn">Next <svg class="ic"><use href="#i-arrowR"/></svg></button>
+</div>
+
+<script>
+(function () {
+  var KEY = 'field_learn_v2';
+  var folds = Array.prototype.slice.call(document.querySelectorAll('.fold'));
+  var total = folds.length;
+  var titles = [
+    ['i-compass','Welcome'], ['i-pencil','Keep a diary'], ['i-layers','What FIELD is'],
+    ['i-shapes','The four words'], ['i-bulb','Ideas to build'], ['i-phone','Build 1 · phone'],
+    ['i-trend','Ten circles, then a loop'], ['i-cpu','Build 2 · hardware'], ['i-flag','Where next']
+  ];
+
+  /* ── identity + pronouns ── */
+  var PRON = { they:{o:'them',p:'their'}, she:{o:'her',p:'her'}, he:{o:'him',p:'his'} };
+  var id = {};
+  try { id = JSON.parse(localStorage.getItem(KEY + '_id') || '{}'); } catch (e) {}
+
+  function personalize() {
+    var name = (id.name && id.name.trim()) ? id.name.trim() : 'friend';
+    var pr = PRON[id.pron] || PRON.they;
+    document.querySelectorAll('.uName').forEach(function (el) { el.textContent = name; });
+    document.querySelectorAll('.uPO').forEach(function (el) { el.textContent = pr.o; });
+    document.querySelectorAll('.uPP').forEach(function (el) { el.textContent = pr.p; });
+  }
+
+  var chosen = id.pron || 'they';
+  document.querySelectorAll('#prons .pron').forEach(function (b) {
+    b.classList.toggle('on', b.dataset.p === chosen);
+    b.addEventListener('click', function () {
+      chosen = b.dataset.p;
+      document.querySelectorAll('#prons .pron').forEach(function (x) { x.classList.toggle('on', x === b); });
+    });
+  });
+
+  var idForm = document.getElementById('idForm');
+  var idBack = document.getElementById('idBack');
+  var nameInput = document.getElementById('nameInput');
+  function saveId() { id = { name: nameInput.value, pron: chosen }; localStorage.setItem(KEY + '_id', JSON.stringify(id)); personalize(); }
+
+  document.getElementById('startBtn').addEventListener('click', function () { saveId(); go(1); });
+  nameInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') { saveId(); go(1); } });
+  document.getElementById('resumeBtn').addEventListener('click', function () {
+    var s = parseInt(localStorage.getItem(KEY), 10); go(!isNaN(s) && s > 0 ? s : 1);
+  });
+  document.getElementById('notMeBtn').addEventListener('click', function () {
+    localStorage.removeItem(KEY + '_id'); localStorage.removeItem(KEY); localStorage.removeItem(KEY + '_visited');
+    id = {}; chosen = 'they';
+    document.querySelectorAll('#prons .pron').forEach(function (x) { x.classList.toggle('on', x.dataset.p === 'they'); });
+    nameInput.value = ''; idForm.style.display = ''; idBack.style.display = 'none'; personalize();
+  });
+  if (id.name) { idForm.style.display = 'none'; idBack.style.display = 'block'; nameInput.value = id.name; }
+  personalize();
+
+  /* ── chapter menu ── */
+  var menu = document.getElementById('menu');
+  var menuBtn = document.getElementById('menuBtn');
+  var jumpNav = document.getElementById('jumpNav');
+  var visited = {};
+  try { visited = JSON.parse(localStorage.getItem(KEY + '_visited') || '{}'); } catch (e) {}
+  titles.forEach(function (t, i) {
+    var b = document.createElement('button');
+    b.className = 'jump'; b.dataset.i = i;
+    b.innerHTML = '<span class="num">' + (i + 1) + '</span><svg class="ic"><use href="#' + t[0] + '"/></svg><span>' + t[1] + '</span><svg class="ic tick"><use href="#i-check"/></svg>';
+    b.addEventListener('click', function () { go(i); menu.classList.remove('open'); });
+    jumpNav.appendChild(b);
+  });
+  var jumps = Array.prototype.slice.call(jumpNav.children);
+  menuBtn.addEventListener('click', function () {
+    var open = menu.classList.toggle('open');
+    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  document.addEventListener('click', function (e) { if (!menu.contains(e.target)) menu.classList.remove('open'); });
+
+  /* ── nav + progressive focus ── */
+  var backBtn = document.getElementById('backBtn');
+  var nextBtn = document.getElementById('nextBtn');
+  var posNum = document.getElementById('posNum');
+  var track = document.getElementById('track');
+  document.getElementById('posTot').textContent = total;
+
+  function go(i) { if (i < 0) i = 0; if (i > total - 1) i = total - 1; folds[i].scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+
+  var current = -1;
+  function setActive(i) {
+    if (i === current) return;
+    current = i; visited[i] = 1;
+    folds.forEach(function (f, k) { f.classList.toggle('active', k === i); if (k === i) reveal(f); });
+    jumps.forEach(function (n, k) { n.classList.toggle('active', k === i); n.classList.toggle('done', !!visited[k] && k !== i); });
+    posNum.textContent = i + 1;
+    track.style.width = ((i + 1) / total * 100) + '%';
+    backBtn.disabled = i === 0; nextBtn.disabled = i === total - 1;
+    localStorage.setItem(KEY, i); localStorage.setItem(KEY + '_visited', JSON.stringify(visited));
+  }
+  function reveal(fold) {
+    if (fold.classList.contains('seen')) return;
+    fold.querySelectorAll('.r').forEach(function (el, idx) { el.style.transitionDelay = (idx * 65) + 'ms'; });
+    fold.classList.add('seen');
+  }
+
+  backBtn.addEventListener('click', function () { go(current - 1); });
+  nextBtn.addEventListener('click', function () { go(current + 1); });
+
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { if (e.isIntersecting) setActive(folds.indexOf(e.target)); });
+  }, { rootMargin: '-45% 0px -45% 0px', threshold: 0 });
+  folds.forEach(function (f) { io.observe(f); });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.altKey && e.key === 'ArrowDown') { e.preventDefault(); go(current + 1); }
+    if (e.altKey && e.key === 'ArrowUp') { e.preventDefault(); go(current - 1); }
+  });
+
+  /* ── resume ── */
+  var saved = parseInt(localStorage.getItem(KEY), 10);
+  if (id.name && !isNaN(saved) && saved > 0 && saved < total) {
+    setTimeout(function () { go(saved); }, 450);
+  } else {
+    reveal(folds[0]); folds[0].classList.add('active'); jumps[0].classList.add('active');
+    backBtn.disabled = true; track.style.width = (1 / total * 100) + '%';
+  }
+})();
+</script>
+<script>
+(function () {
+  function stipple(pathFn, count, box) {
+    var pts = [], tries = 0;
+    while (pts.length < count && tries < count * 30) {
+      tries++;
+      var x = box.x + Math.random() * box.w, y = box.y + Math.random() * box.h;
+      if (pathFn(x, y)) pts.push([x, y]);
+    }
+    return pts;
+  }
+  var SHAPES = {
+    square: function (w, h) {
+      var box = { x: w * 0.18, y: h * 0.18, w: w * 0.64, h: h * 0.64 };
+      return stipple(function (x, y) { return x >= box.x && x <= box.x + box.w && y >= box.y && y <= box.y + box.h; }, 90, box);
+    },
+    circle: function (w, h) {
+      var cx = w / 2, cy = h / 2, r = w * 0.38;
+      var box = { x: cx - r, y: cy - r, w: r * 2, h: r * 2 };
+      return stipple(function (x, y) { var dx = (x - cx) / r, dy = (y - cy) / r; return dx * dx + dy * dy <= 1; }, 90, box);
+    },
+    triangle: function (w, h) {
+      var box = { x: w * 0.08, y: h * 0.14, w: w * 0.84, h: h * 0.74 };
+      var ax = w / 2, ay = h * 0.12, bx = w * 0.9, by = h * 0.88, cx = w * 0.1, cy = h * 0.88;
+      function sign(x1, y1, x2, y2, x3, y3) { return (x1 - x3) * (y2 - y3) - (x2 - x3) * (y1 - y3); }
+      return stipple(function (x, y) {
+        var d1 = sign(x, y, ax, ay, bx, by), d2 = sign(x, y, bx, by, cx, cy), d3 = sign(x, y, cx, cy, ax, ay);
+        var hasNeg = (d1 < 0) || (d2 < 0) || (d3 < 0), hasPos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+        return !(hasNeg && hasPos);
+      }, 90, box);
+    },
+    arrow: function (w, h) {
+      var pts = [];
+      var shaft = { x: w * 0.1, y: h * 0.42, w: w * 0.5, h: h * 0.16 };
+      pts = pts.concat(stipple(function (x, y) { return x >= shaft.x && x <= shaft.x + shaft.w && y >= shaft.y && y <= shaft.y + shaft.h; }, 55, shaft));
+      var head = { x: w * 0.55, y: h * 0.18, w: w * 0.36, h: h * 0.64 };
+      var ax = w * 0.55, ay = h * 0.18, bx = w * 0.55, by = h * 0.82, cx = w * 0.92, cy = h * 0.5;
+      function sign(x1, y1, x2, y2, x3, y3) { return (x1 - x3) * (y2 - y3) - (x2 - x3) * (y1 - y3); }
+      pts = pts.concat(stipple(function (x, y) {
+        var d1 = sign(x, y, ax, ay, bx, by), d2 = sign(x, y, bx, by, cx, cy), d3 = sign(x, y, cx, cy, ax, ay);
+        var hasNeg = (d1 < 0) || (d2 < 0) || (d3 < 0), hasPos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+        return !(hasNeg && hasPos);
+      }, 45, head));
+      return pts;
+    }
+  };
+  var glyphs = document.querySelectorAll('canvas.glyph');
+  for (var i = 0; i < glyphs.length; i++) {
+    var cv = glyphs[i];
+    var dpr = window.devicePixelRatio || 1;
+    var w = cv.width, h = cv.height;
+    cv.width = w * dpr; cv.height = h * dpr;
+    cv.style.width = w + 'px'; cv.style.height = h + 'px';
+    var ctx = cv.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var fn = SHAPES[cv.getAttribute('data-shape')];
+    if (!fn) continue;
+    var pts = fn(w, h);
+    var color = getComputedStyle(document.body).getPropertyValue('--ink') || '#111';
+    ctx.fillStyle = color.trim() || '#111';
+    for (var j = 0; j < pts.length; j++) {
+      ctx.beginPath();
+      ctx.arc(pts[j][0], pts[j][1], 1.15, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+})();
+</script>
+</body>
+</html>

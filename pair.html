@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FIELD — Live Pairing Demo</title>
+<meta name="description" content="Pair your phone with this page in seconds. Shake it, swipe it — watch FIELD turn motion into a live physical-digital scene, no install required." />
+<link rel="icon" href="icon.png" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #f2f0ea;
+    --ink: #111111;
+    --paper: #ffffff;
+    --muted: #666666;
+    --line: #111111;
+    --dot: #111111;
+    --accent: #111111;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #111111; --ink: #f2f0ea; --paper: #191919; --muted: #999999; --line: #f2f0ea; --dot: #f2f0ea; --accent: #f2f0ea; }
+  }
+  :root[data-theme='light'] { --bg: #f2f0ea; --ink: #111111; --paper: #ffffff; --muted: #666666; --line: #111111; --dot: #111111; --accent: #111111; }
+  :root[data-theme='dark']  { --bg: #111111; --ink: #f2f0ea; --paper: #191919; --muted: #999999; --line: #f2f0ea; --dot: #f2f0ea; --accent: #f2f0ea; }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-font-smoothing: antialiased; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: 'Space Grotesk', sans-serif;
+    min-height: 100vh; overflow-x: hidden;
+  }
+  .mono { font-family: 'DM Mono', monospace; }
+  a { color: inherit; }
+
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 6vw; border-bottom: 3px solid var(--line);
+  }
+  .topbar .brand { font-weight: 700; font-size: 1.1rem; letter-spacing: -.02em; text-transform: uppercase; }
+  .topbar .back { font-size: .75rem; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+
+  .wrap { max-width: 920px; margin: 0 auto; padding: 8vh 6vw 10vh; }
+
+  h1 {
+    font-weight: 700; letter-spacing: -.03em; line-height: .92;
+    font-size: clamp(2.6rem, 8vw, 5.2rem); text-transform: uppercase;
+  }
+  .lede { margin-top: 20px; font-size: 1.15rem; color: var(--muted); max-width: 46ch; font-weight: 400; }
+
+  /* ── Role picker ─────────────────────────────────────── */
+  .picker { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 48px; }
+  @media (max-width: 640px) { .picker { grid-template-columns: 1fr; } }
+  .card {
+    border: 3px solid var(--line); padding: 32px 26px; cursor: pointer;
+    background: var(--paper); transition: transform .15s ease;
+  }
+  .card:hover { transform: translate(-3px,-3px); box-shadow: 6px 6px 0 var(--line); }
+  .card .num { font-size: .8rem; font-weight: 600; letter-spacing: .1em; color: var(--muted); }
+  .card h2 { font-size: 1.6rem; font-weight: 700; margin-top: 10px; text-transform: uppercase; letter-spacing: -.01em; }
+  .card p { margin-top: 10px; color: var(--muted); font-size: .95rem; }
+
+  /* ── Shape choice (host only) ────────────────────────── */
+  .shapechoice { display: flex; gap: 16px; margin-top: 32px; }
+  .shapebtn {
+    border: 3px solid var(--line); padding: 14px 22px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .05em; font-size: .85rem;
+    background: transparent; color: var(--ink); cursor: pointer;
+  }
+  .shapebtn.active { background: var(--line); color: var(--bg); }
+
+  /* ── Room code display ───────────────────────────────── */
+  .codebox { margin-top: 40px; }
+  .codebox .lbl { font-size: .78rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .codedigits { display: flex; gap: 10px; margin-top: 14px; }
+  .codedigits span {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 60px; height: 76px; border: 3px solid var(--line);
+    font-size: 2.4rem; font-weight: 700; background: var(--paper);
+  }
+  .codehelp { margin-top: 16px; color: var(--muted); font-size: .95rem; }
+
+  /* ── Code entry (guest) ───────────────────────────────── */
+  .entry { margin-top: 40px; display: flex; gap: 12px; flex-wrap: wrap; }
+  .entry input {
+    font-family: 'DM Mono', monospace; font-size: 1.8rem; letter-spacing: .3em;
+    width: 220px; padding: 16px 18px; border: 3px solid var(--line);
+    background: var(--paper); color: var(--ink); text-align: center;
+  }
+  .entry input:focus { outline: none; }
+  .entry button, .primary-btn {
+    font-family: inherit; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+    font-size: .95rem; padding: 16px 30px; border: 3px solid var(--line);
+    background: var(--line); color: var(--bg); cursor: pointer;
+  }
+  .entry button:disabled { opacity: .4; cursor: default; }
+
+  .status { margin-top: 26px; font-size: .9rem; color: var(--muted); }
+  .status.live { color: var(--ink); font-weight: 600; }
+  .status .dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--muted); margin-right:8px; }
+  .status.live .dot { background: #2ba84a; }
+
+  /* ── Stage (shape + canvas) ───────────────────────────── */
+  .stage { margin-top: 40px; border: 3px solid var(--line); background: var(--paper); position: relative; }
+  canvas { display: block; width: 100%; height: 460px; touch-action: none; }
+  .stage .cap { padding: 16px 20px; border-top: 3px solid var(--line); font-size: .85rem; color: var(--muted); display:flex; justify-content:space-between; gap: 12px; flex-wrap: wrap; }
+
+  /* ── Phone touch surface ─────────────────────────────── */
+  .touchsurface {
+    margin-top: 40px; border: 3px solid var(--line); background: var(--paper);
+    height: 40vh; display: flex; align-items: center; justify-content: center;
+    text-align: center; flex-direction: column; gap: 10px; user-select: none;
+  }
+  .touchsurface h3 { font-size: 1.3rem; font-weight: 700; text-transform: uppercase; }
+  .touchsurface p { color: var(--muted); font-size: .9rem; max-width: 30ch; }
+  .shakebar { margin-top: 10px; width: 70%; height: 10px; border: 2px solid var(--line); position: relative; }
+  .shakebar i { display:block; height:100%; width:0%; background: var(--line); transition: width .08s linear; }
+
+  .hidden { display: none !important; }
+  footer { padding: 30px 6vw; border-top: 3px solid var(--line); font-size: .78rem; color: var(--muted); text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="brand" href="index.html">FIELD</a>
+  <a class="back" href="connect.html">&larr; back to connect</a>
+</div>
+
+<div class="wrap">
+
+  <!-- STEP 0: role picker -->
+  <section id="picker-view">
+    <h1>Shake it. Swipe it.<br>Watch it move.</h1>
+    <p class="lede">Two devices, no install, no cable. Pair a phone with this page over a live connection and turn motion into a physical-digital scene — the same idea that drives every FIELD project.</p>
+    <div class="picker">
+      <div class="card" id="pick-host">
+        <div class="num mono">01 — DESKTOP</div>
+        <h2>Show the scene</h2>
+        <p>Open this on a laptop or desktop. It generates a room code and displays the shape.</p>
+      </div>
+      <div class="card" id="pick-guest">
+        <div class="num mono">02 — PHONE</div>
+        <h2>Drive the scene</h2>
+        <p>Open this on your phone. Enter the code shown on the desktop screen to connect.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 1a: HOST view -->
+  <section id="host-view" class="hidden">
+    <h1>Pick a scene</h1>
+    <p class="lede">This shape lives on the desktop screen. Your phone will control it once paired.</p>
+    <div class="shapechoice">
+      <button class="shapebtn active" data-shape="tree">Tree</button>
+      <button class="shapebtn" data-shape="cake">Cake</button>
+    </div>
+
+    <div class="codebox">
+      <div class="lbl">Room code — enter this on your phone</div>
+      <div class="codedigits" id="code-digits"></div>
+      <div class="codehelp">Open <span class="mono" id="url-hint"></span> on your phone, choose "Drive the scene," and type this code.</div>
+    </div>
+
+    <div class="status" id="host-status"><span class="dot"></span>waiting for phone…</div>
+
+    <div class="stage">
+      <canvas id="host-canvas"></canvas>
+      <div class="cap">
+        <span id="host-cap-left">Shake the phone to move the tree.</span>
+        <span class="mono" id="host-cap-right">0 msgs</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 1b: GUEST view -->
+  <section id="guest-view" class="hidden">
+    <h1>Enter the code</h1>
+    <p class="lede">Type the 6-digit code shown on the desktop screen to connect this phone to it.</p>
+
+    <div class="entry">
+      <input type="text" id="code-input" inputmode="numeric" maxlength="6" placeholder="000000" />
+      <button id="join-btn">Connect</button>
+    </div>
+
+    <div class="status" id="guest-status"><span class="dot"></span>not connected</div>
+
+    <div id="guest-controls" class="hidden">
+      <div class="touchsurface" id="touch-surface">
+        <h3>Shake me</h3>
+        <p>Shake this phone to move the shape. Swipe left/right for a cut gesture.</p>
+        <div class="shakebar"><i id="shake-fill"></i></div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer>FIELD — a visual canvas for physical-digital prototypes. This demo runs over a direct WebRTC connection between your two devices.</footer>
+
+<script>
+(function () {
+  const SIGNAL_URL = 'wss://field-pair-signal.pkch101.workers.dev';
+  const $ = (id) => document.getElementById(id);
+
+  document.getElementById('url-hint').textContent = location.host + location.pathname;
+
+  // ── view switching ──────────────────────────────────────
+  const views = ['picker-view', 'host-view', 'guest-view'];
+  function show(view) { views.forEach(v => $(v).classList.toggle('hidden', v !== view)); }
+
+  $('pick-host').onclick = () => { show('host-view'); startHost(); };
+  $('pick-guest').onclick = () => { show('guest-view'); };
+
+  // ── shared WebRTC plumbing ──────────────────────────────
+  function makeSignaling(role, code) {
+    const ws = new WebSocket(`${SIGNAL_URL}/room/${code}/connect?role=${role}`);
+    return ws;
+  }
+
+  const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+
+  // ══════════════════════════════════════════════════════
+  // HOST (desktop) — generates code, shows shape, waits for guest
+  // ══════════════════════════════════════════════════════
+  let hostShape = 'tree';
+  let pc, dc, ws, msgCount = 0;
+  let shakeEnergy = 0, cutAnim = null;
+
+  document.querySelectorAll('.shapebtn').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.shapebtn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      hostShape = btn.dataset.shape;
+      $('host-cap-left').textContent = hostShape === 'tree'
+        ? 'Shake the phone to move the tree.'
+        : 'Swipe on the phone to cut the cake.';
+    };
+  });
+
+  function randomCode() {
+    return String(Math.floor(100000 + (crypto.getRandomValues(new Uint32Array(1))[0] / 4294967295) * 900000));
+  }
+
+  function startHost() {
+    const code = randomCode();
+    $('code-digits').innerHTML = code.split('').map(d => `<span>${d}</span>`).join('');
+
+    ws = makeSignaling('host', code);
+    ws.onopen = () => setHostStatus('waiting', 'room open — waiting for phone…');
+    ws.onmessage = async (ev) => {
+      const msg = JSON.parse(ev.data);
+      if (msg.type === 'peer-joined') { await createOffer(); return; }
+      if (msg.type === 'peer-left') { setHostStatus('waiting', 'phone disconnected — waiting…'); return; }
+      if (msg.type === 'answer') { await pc.setRemoteDescription(msg.sdp); return; }
+      if (msg.type === 'ice') { try { await pc.addIceCandidate(msg.candidate); } catch (e) {} return; }
+    };
+
+    setupCanvas();
+    requestAnimationFrame(draw);
+  }
+
+  function setHostStatus(kind, text) {
+    const el = $('host-status');
+    el.classList.toggle('live', kind === 'live');
+    el.innerHTML = `<span class="dot"></span>${text}`;
+  }
+
+  async function createOffer() {
+    pc = new RTCPeerConnection(rtcConfig);
+    dc = pc.createDataChannel('gestures');
+    dc.onopen = () => setHostStatus('live', 'phone connected — live');
+    dc.onmessage = (ev) => handleGesture(JSON.parse(ev.data));
+    pc.onicecandidate = (ev) => { if (ev.candidate) ws.send(JSON.stringify({ type: 'ice', candidate: ev.candidate })); };
+
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    ws.send(JSON.stringify({ type: 'offer', sdp: offer }));
+  }
+
+  function handleGesture(msg) {
+    msgCount++; $('host-cap-right').textContent = msgCount + ' msgs';
+    if (msg.type === 'shake') shakeEnergy = Math.min(1, shakeEnergy + msg.intensity);
+    if (msg.type === 'swipe' && hostShape === 'cake') cutAnim = { t: 0, dir: Math.sign(msg.dx) || 1 };
+  }
+
+  // ── stippled shape rendering ────────────────────────────
+  let cw = 0, ch = 0, ctx2d;
+  function setupCanvas() {
+    const cv = $('host-canvas');
+    ctx2d = cv.getContext('2d');
+    const resize = () => {
+      const rect = cv.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      cw = rect.width; ch = rect.height;
+      cv.width = cw * dpr; cv.height = ch * dpr;
+      ctx2d.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+    resize();
+    window.addEventListener('resize', resize);
+  }
+
+  function stipple(pathFn, count, box) {
+    const pts = [];
+    let tries = 0;
+    while (pts.length < count && tries < count * 30) {
+      tries++;
+      const x = box.x + Math.random() * box.w;
+      const y = box.y + Math.random() * box.h;
+      if (pathFn(x, y)) pts.push([x, y]);
+    }
+    return pts;
+  }
+
+  let treePts = null, cakePts = null;
+
+  function buildTree(cx, cy) {
+    const trunk = { x: cx - 14, y: cy + 10, w: 28, h: 90 };
+    const trunkPts = stipple((x, y) => x >= trunk.x && x <= trunk.x + trunk.w && y >= trunk.y && y <= trunk.y + trunk.h, 90, trunk);
+    const foliageBox = { x: cx - 130, y: cy - 190, w: 260, h: 220 };
+    const foliagePts = stipple((x, y) => {
+      const dx = (x - cx) / 130, dy = (y - (cy - 90)) / 110;
+      return dx * dx + dy * dy <= 1;
+    }, 700, foliageBox);
+    return { trunkPts, foliagePts, cx, cy };
+  }
+
+  function buildCake(cx, cy) {
+    const body = { x: cx - 150, y: cy - 60, w: 300, h: 120 };
+    const bodyPts = stipple((x, y) => x >= body.x && x <= body.x + body.w && y >= body.y && y <= body.y + body.h, 900, body);
+    const candle = { x: cx - 6, y: cy - 130, w: 12, h: 60 };
+    const candlePts = stipple((x, y) => x >= candle.x && x <= candle.x + candle.w && y >= candle.y && y <= candle.y + candle.h, 40, candle);
+    return { bodyPts, candlePts, cx, cy, body };
+  }
+
+  function draw() {
+    if (!ctx2d) { requestAnimationFrame(draw); return; }
+    ctx2d.clearRect(0, 0, cw, ch);
+    const cx = cw / 2, cy = ch / 2 + 40;
+    const dotColor = getComputedStyle(document.body).getPropertyValue('--dot').trim() || '#111';
+    ctx2d.fillStyle = dotColor;
+
+    shakeEnergy *= 0.9;
+
+    if (hostShape === 'tree') {
+      if (!treePts || treePts.cx !== cx) treePts = buildTree(cx, cy);
+      const wobble = Math.sin(Date.now() / 60) * shakeEnergy * 18;
+      treePts.trunkPts.forEach(([x, y]) => ctx2d.fillRect(x, y, 2.4, 2.4));
+      treePts.foliagePts.forEach(([x, y]) => {
+        const lift = (cy - 90 - y) / 110; // 0 at base, ~1 at top
+        ctx2d.fillRect(x + wobble * lift, y, 2.4, 2.4);
+      });
+    } else {
+      if (!cakePts || cakePts.cx !== cx) cakePts = buildCake(cx, cy);
+      let split = 0;
+      if (cutAnim) {
+        cutAnim.t += 0.04;
+        split = Math.min(1, cutAnim.t) * 60;
+        if (cutAnim.t >= 1.6) cutAnim = null;
+      }
+      cakePts.candlePts.forEach(([x, y]) => ctx2d.fillRect(x, y, 2.4, 2.4));
+      cakePts.bodyPts.forEach(([x, y]) => {
+        const side = x < cakePts.cx ? -1 : 1;
+        const offset = split ? side * split : 0;
+        ctx2d.fillRect(x + offset, y, 2.4, 2.4);
+      });
+      if (split > 4) {
+        ctx2d.strokeStyle = dotColor;
+        ctx2d.lineWidth = 2;
+        ctx2d.beginPath();
+        ctx2d.moveTo(cakePts.cx, cakePts.body.y - 10);
+        ctx2d.lineTo(cakePts.cx, cakePts.body.y + cakePts.body.h + 10);
+        ctx2d.stroke();
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+
+  // ══════════════════════════════════════════════════════
+  // GUEST (phone) — enters code, streams motion + touch
+  // ══════════════════════════════════════════════════════
+  let gws, gpc, gdc;
+
+  $('join-btn').onclick = async () => {
+    const code = $('code-input').value.trim();
+    if (!/^\d{6}$/.test(code)) return;
+    $('join-btn').disabled = true;
+    setGuestStatus('waiting', 'connecting…');
+
+    if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+      try { await DeviceMotionEvent.requestPermission(); } catch (e) {}
+    }
+
+    gws = makeSignaling('guest', code);
+    gws.onopen = () => setGuestStatus('waiting', 'waiting for desktop…');
+    gws.onmessage = async (ev) => {
+      const msg = JSON.parse(ev.data);
+      if (msg.type === 'offer') {
+        gpc = new RTCPeerConnection(rtcConfig);
+        gpc.onicecandidate = (e) => { if (e.candidate) gws.send(JSON.stringify({ type: 'ice', candidate: e.candidate })); };
+        gpc.ondatachannel = (e) => { gdc = e.channel; gdc.onopen = onGuestConnected; };
+        await gpc.setRemoteDescription(msg.sdp);
+        const answer = await gpc.createAnswer();
+        await gpc.setLocalDescription(answer);
+        gws.send(JSON.stringify({ type: 'answer', sdp: answer }));
+        return;
+      }
+      if (msg.type === 'ice') { try { await gpc.addIceCandidate(msg.candidate); } catch (e) {} return; }
+      if (msg.type === 'peer-left') { setGuestStatus('waiting', 'desktop disconnected'); }
+    };
+  };
+
+  function setGuestStatus(kind, text) {
+    const el = $('guest-status');
+    el.classList.toggle('live', kind === 'live');
+    el.innerHTML = `<span class="dot"></span>${text}`;
+  }
+
+  function onGuestConnected() {
+    setGuestStatus('live', 'connected — go ahead, shake or swipe');
+    $('guest-controls').classList.remove('hidden');
+    attachMotion();
+    attachSwipe();
+  }
+
+  function attachMotion() {
+    let last = null;
+    window.addEventListener('devicemotion', (e) => {
+      const a = e.accelerationIncludingGravity || e.acceleration;
+      if (!a) return;
+      const mag = Math.sqrt((a.x||0)**2 + (a.y||0)**2 + (a.z||0)**2);
+      if (last !== null) {
+        const delta = Math.abs(mag - last);
+        if (delta > 3) {
+          const intensity = Math.min(1, delta / 30);
+          $('shake-fill').style.width = (intensity * 100) + '%';
+          if (gdc && gdc.readyState === 'open') gdc.send(JSON.stringify({ type: 'shake', intensity }));
+        }
+      }
+      last = mag;
+    });
+  }
+
+  function attachSwipe() {
+    let startX = null, startY = null, startT = 0;
+    const surf = $('touch-surface');
+    surf.addEventListener('touchstart', (e) => {
+      const t = e.touches[0];
+      startX = t.clientX; startY = t.clientY; startT = Date.now();
+    });
+    surf.addEventListener('touchend', (e) => {
+      if (startX === null) return;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - startX, dy = t.clientY - startY;
+      const dt = Date.now() - startT;
+      if (Math.abs(dx) > 40 && dt < 600 && gdc && gdc.readyState === 'open') {
+        gdc.send(JSON.stringify({ type: 'swipe', dx, dy }));
+      }
+      startX = null;
+    });
+  }
+
+  $('code-input').addEventListener('input', (e) => {
+    e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6);
+  });
+})();
+</script>
+</body>
+</html>

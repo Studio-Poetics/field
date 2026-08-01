@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Connect Two Things — a FIELD guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ─────────────────────────────────────────────────────────────
+     Same reading experience as learn.html: warm paper, single
+     column, folds, a chapter menu. This guide assumes you already
+     know the four words (Actor, Role, Cue, Mechanism) from
+     "Your First FIELD" and shows scenarios with two devices.
+     ───────────────────────────────────────────────────────────── */
+
+  :root {
+    --paper:      #faf9f6;
+    --paper-2:    #f2f0ea;
+    --card:       #ffffff;
+    --ink:        #111111;
+    --muted:      #666666;
+    --faint:      #999999;
+    --line:       #111111;
+
+    --accent:     #7c3aed;
+    --accent-ink: #6d28d9;
+    --accent-soft:#ede9fe;
+    --accent-line:#7c3aed;
+    --accent2:      #c2410c;
+    --accent2-soft: #fdece1;
+
+    --code-bg:    #111111;
+    --code-ink:   #f2f0ea;
+    --code-dim:   #999999;
+    --code-key:   #cfcac0;
+
+    --sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --serif: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+    --mono: 'DM Mono', ui-monospace, "SF Mono", monospace;
+
+    --bar-h: 58px;
+    --col: 680px;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 30px; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 19px;
+    line-height: 1.72;
+    -webkit-font-smoothing: antialiased;
+    padding-bottom: var(--bar-h);
+  }
+
+  .ic { width: 1.1em; height: 1.1em; stroke: currentColor; fill: none;
+        stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round;
+        vertical-align: -0.16em; flex: none; }
+
+  .menu { position: fixed; top: 18px; right: 22px; z-index: 60; }
+  .menu-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--card); color: var(--ink);
+    border: 2px solid var(--line); border-radius: 0;
+    padding: 9px 15px; font: inherit; font-size: 0.82rem; cursor: pointer;
+    box-shadow: 3px 3px 0 var(--line);
+  }
+  .menu-btn .lbl { font-family: var(--mono); letter-spacing: 0.05em; }
+  .menu-btn .caret { transition: transform .25s ease; color: var(--faint); }
+  .menu:hover .menu-btn .caret, .menu.open .menu-btn .caret { transform: rotate(180deg); }
+
+  .menu-panel {
+    position: absolute; top: calc(100% + 10px); right: 0;
+    width: 288px; max-height: 76vh; overflow-y: auto;
+    background: var(--card); border: 2px solid var(--line);
+    border-radius: 0; padding: 8px;
+    box-shadow: 6px 6px 0 var(--line);
+    opacity: 0; transform: translateY(-12px) scale(.98);
+    transform-origin: top right; pointer-events: none;
+    transition: opacity .26s ease, transform .3s cubic-bezier(.2,.8,.25,1);
+  }
+  .menu:hover .menu-panel, .menu:focus-within .menu-panel, .menu.open .menu-panel {
+    opacity: 1; transform: none; pointer-events: auto;
+  }
+  .menu-panel .cap { font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); padding: 10px 12px 6px; }
+  .menu-panel button.jump {
+    display: flex; align-items: center; gap: 11px; width: 100%; text-align: left;
+    background: none; border: none; border-radius: 0; cursor: pointer;
+    padding: 9px 12px; font: inherit; font-size: 0.9rem; color: var(--muted); line-height: 1.3;
+  }
+  .menu-panel button.jump:hover { background: var(--paper-2); color: var(--ink); }
+  .menu-panel button.jump.active { background: var(--accent); color: #fff; }
+  .menu-panel button.jump.active .num { color: rgba(255,255,255,.7); }
+  .menu-panel button.jump .num { font-family: var(--mono); font-size: 0.72rem; color: var(--faint); width: 16px; flex: none; }
+  .menu-panel button.jump .ic { color: inherit; }
+  .menu-panel button.jump .tick { margin-left: auto; opacity: 0; color: var(--accent); width: 15px; height: 15px; }
+  .menu-panel button.jump.done .tick { opacity: 1; }
+  .menu-panel button.jump.active .tick { color: #fff; }
+
+  .stage { max-width: var(--col); margin: 0 auto; padding: 0 26px; }
+  .fold {
+    min-height: 78vh;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 64px 0 40px;
+    opacity: 0.42; transition: opacity .6s ease;
+  }
+  .fold.active { opacity: 1; }
+  .fold + .fold { border-top: 2px solid var(--line); }
+  .fold .inner { width: 100%; }
+  .r { opacity: 0; transform: translateY(16px); transition: opacity .6s ease, transform .6s ease; }
+  .fold.seen .r { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { .fold { opacity: 1; } .r { opacity: 1; transform: none; } }
+
+  .scrollcue { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: 40px; color: var(--faint); font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.14em; text-transform: uppercase; }
+  .scrollcue svg { animation: bob 1.9s ease-in-out infinite; }
+  @keyframes bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(5px)} }
+
+  .tag { display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.13em; text-transform: uppercase; color: var(--accent-ink); background: var(--accent-soft); border: 2px solid var(--accent-line); border-radius: 0; padding: 5px 13px; margin-bottom: 22px; }
+  h1 { font-family: var(--serif); font-weight: 700; font-size: clamp(2rem, 5vw, 2.9rem); line-height: 0.98; letter-spacing: -0.03em; text-transform: uppercase; margin: 0 0 18px; }
+  h2 { font-family: var(--serif); font-weight: 700; font-size: 1.5rem; letter-spacing: -0.02em; text-transform: uppercase; margin: 34px 0 10px; }
+  h3 { font-size: 1.06rem; margin: 22px 0 8px; }
+  p { margin: 0 0 16px; color: var(--muted); }
+  p.lead { font-size: 1.18rem; color: var(--ink); }
+  .fold p.lead:first-of-type { font-family: var(--serif); font-weight: 500; }
+  strong { color: var(--ink); font-weight: 640; }
+  em { color: var(--ink); }
+  a { color: var(--accent-ink); text-underline-offset: 3px; }
+  ul, ol { color: var(--muted); padding-left: 1.2em; }
+  li { margin: 6px 0; }
+
+  .steps { list-style: none; counter-reset: s; padding: 0; margin: 22px 0; }
+  .steps > li { counter-increment: s; position: relative; padding: 16px 18px 16px 58px; background: var(--card); border: 2px solid var(--line); border-radius: 0; margin: 10px 0; }
+  .steps > li::before { content: counter(s); position: absolute; left: 16px; top: 15px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 0.82rem; color: #fff; background: var(--accent); border-radius: 0; }
+  .steps > li .act { color: var(--ink); font-weight: 560; display: block; }
+  .steps > li .see { display: flex; align-items: baseline; gap: 7px; margin-top: 6px; font-size: 0.92rem; color: var(--muted); }
+  .steps > li .see b { color: var(--accent-ink); font-weight: 600; font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; flex: none; }
+
+  .note { border-radius: 0; padding: 15px 19px; margin: 18px 0; font-size: 0.96rem; }
+  .note .lbl { display: flex; align-items: center; gap: 7px; font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+  .note p { color: var(--ink); margin: 0; }
+  .note p + p { margin-top: 8px; }
+  .note.why { background: var(--card); border: 2px solid var(--line); }
+  .note.why .lbl { color: var(--accent-ink); }
+  .note.diary { background: var(--accent-soft); border: 2px solid var(--accent-line); }
+  .note.diary .lbl { color: var(--accent-ink); }
+  .note.fix { background: #fbf6ec; border: 1px solid #ecdcb8; }
+  .note.fix .lbl { color: #8a6d1e; }
+  .note.fix ul { margin: 4px 0 0; color: var(--ink); }
+  .note.fix li { margin: 4px 0; }
+
+  .flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 8px; margin: 24px 0; font-family: var(--mono); font-size: 0.78rem; }
+  .flow .box { background: var(--card); border: 2px solid var(--line); border-radius: 0; padding: 13px 15px; flex: 1 1 130px; text-align: center; }
+  .flow .box:nth-child(3) { border-color: var(--accent2); }
+  .flow .box small { display: block; color: var(--faint); text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.62rem; margin-bottom: 4px; }
+  .flow .box b { color: var(--ink); font-weight: 620; }
+  .flow .arrow { align-self: center; color: var(--accent); flex: none; }
+  .glyph { width: 32px; height: 32px; }
+  .flow .arrow.both { color: var(--accent); }
+
+  .concepts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 22px; }
+  .concept { background: var(--card); border: 2px solid var(--line); border-top: 3px solid var(--accent); border-radius: 0; padding: 16px 18px; }
+  .concept .word { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-ink); }
+  .concept h3 { margin: 6px 0 5px; font-size: 1.1rem; }
+  .concept p { margin: 0; font-size: 0.92rem; }
+
+  .exs { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 22px; }
+  .ex { background: var(--card); border: 2px solid var(--line); border-radius: 0; padding: 17px 19px; }
+  .ex-top { display: flex; align-items: center; gap: 11px; margin-bottom: 8px; }
+  .ex-ic { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; flex: none; background: var(--accent-soft); color: var(--accent-ink); border-radius: 0; }
+  .ex-ic .ic { width: 21px; height: 21px; }
+  .ex-top h3 { margin: 0; font-size: 1.02rem; }
+  .ex-diff { margin-left: auto; font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); border: 2px solid var(--line); border-radius: 0; padding: 3px 9px; }
+  .ex-diff.easy { color: var(--accent-ink); border-color: var(--accent-line); background: var(--accent-soft); }
+  .ex > p { font-size: 0.91rem; margin-bottom: 12px; }
+  .ex-recipe { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.03em; background: var(--paper); border: 2px solid var(--line); border-radius: 0; padding: 3px 9px; color: var(--muted); }
+  .chip b { color: var(--accent-ink); font-weight: 600; }
+
+  .filename { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.04em; color: var(--faint); margin: 18px 0 -8px; }
+  pre { background: var(--code-bg); color: var(--code-ink); border-radius: 0; padding: 17px 19px; overflow-x: auto; font-family: var(--mono); font-size: 0.84rem; line-height: 1.62; margin: 16px 0; }
+  pre .c { color: var(--code-dim); }
+  pre .k { color: var(--code-key); }
+  code { font-family: var(--mono); font-size: 0.85em; background: var(--paper-2); border: 2px solid var(--line); border-radius: 0; padding: 1px 6px; }
+  pre code { background: none; border: none; padding: 0; font-size: 1em; }
+
+  .check { list-style: none; padding: 0; margin: 18px 0; }
+  .check li { padding-left: 30px; position: relative; margin: 10px 0; color: var(--ink); }
+  .check li svg { position: absolute; left: 0; top: 4px; color: var(--accent); }
+
+  .who { display: flex; flex-wrap: wrap; gap: 10px; margin: 22px 0; }
+  .who .card { flex: 1 1 190px; background: var(--card); border: 2px solid var(--line); border-top: 3px solid var(--accent); border-radius: 0; padding: 14px 16px; }
+  .who .card:nth-child(2) { border-top-color: var(--accent2); }
+  .who .card:nth-child(3n) { border-top-color: var(--accent2); }
+  .who .card .role { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-ink); margin-bottom: 6px; }
+  .who .card p { margin: 0; font-size: 0.9rem; }
+
+  .footbar {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; height: var(--bar-h);
+    display: flex; align-items: center; gap: 16px;
+    background: rgba(247,243,234,0.9); backdrop-filter: blur(9px);
+    border-top: 2px solid var(--line); padding: 0 22px;
+  }
+  .footbar .nb { display: inline-flex; align-items: center; gap: 8px; background: none; border: none; cursor: pointer; font: inherit; font-size: 0.9rem; color: var(--ink); padding: 8px 6px; border-radius: 0; }
+  .footbar .nb:disabled { color: var(--faint); cursor: default; }
+  .footbar .nb.next { margin-left: auto; color: var(--accent-ink); font-weight: 600; }
+  .footbar .nb:not(:disabled):hover { color: var(--accent-ink); }
+  .footbar .pos { position: absolute; left: 50%; transform: translateX(-50%); font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.06em; color: var(--faint); }
+  .footbar .pos b { color: var(--accent-ink); }
+  .footbar .track { position: absolute; top: -1px; left: 0; height: 2px; background: var(--accent); transition: width .4s ease; }
+
+  @media (max-width: 720px) {
+    body { font-size: 18px; }
+    .concepts, .exs { grid-template-columns: 1fr; }
+    .footbar .pos { display: none; }
+    .menu { top: 14px; right: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── ICON SPRITE ── -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></symbol>
+  <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/></symbol>
+  <symbol id="i-shapes" viewBox="0 0 24 24"><path d="M8.3 10a.7.7 0 0 1-.626-1.079L11.4 3a.7.7 0 0 1 1.198 0l3.726 5.921A.7.7 0 0 1 15.7 10Z"/><rect x="3" y="14" width="7" height="7" rx="1"/><circle cx="17.5" cy="17.5" r="3.5"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+  <symbol id="i-chevD" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></symbol>
+  <symbol id="i-arrowR" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></symbol>
+  <symbol id="i-arrowL" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="12" y1="8" x2="12.01" y2="8"/></symbol>
+  <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+  <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-wind" viewBox="0 0 24 24"><path d="M12.8 19.6A2 2 0 1 0 14 16H2"/><path d="M17.5 8a2.5 2.5 0 1 1 2 4H2"/><path d="M9.8 4.4A2 2 0 1 1 11 8H2"/></symbol>
+  <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5.76.76 1.23 1.52 1.41 2.5"/></symbol>
+</defs></svg>
+
+<!-- ── CHAPTER MENU ── -->
+<div class="menu" id="menu">
+  <button class="menu-btn" id="menuBtn" aria-haspopup="true" aria-expanded="false">
+    <svg class="ic"><use href="#i-list"/></svg>
+    <span class="lbl">Chapters</span>
+    <svg class="ic caret"><use href="#i-chevD"/></svg>
+  </button>
+  <div class="menu-panel" id="menuPanel">
+    <div class="cap">Jump to a chapter</div>
+    <nav id="jumpNav"></nav>
+  </div>
+</div>
+
+<div class="stage">
+
+  <!-- 0 · WELCOME -->
+  <section class="fold" data-i="0">
+    <div class="inner">
+      <span class="tag r"><svg class="ic"><use href="#i-compass"/></svg> Start here</span>
+      <h1 class="r">Connect two things.</h1>
+      <p class="lead r">One phone is nice. Two phones, or a phone and a board, is where FIELD gets interesting.</p>
+      <p class="r">This guide picks up after <a href="learn.html">Your First FIELD</a>. It assumes you already know the four words — <strong>Actor</strong>, <strong>Role</strong>, <strong>Cue</strong>, <strong>Mechanism</strong> — and that you have built at least one small thing.</p>
+      <p class="r">You will meet three scenarios, then learn how to add even more devices, then build one real project that uses everything.</p>
+      <div class="who r">
+        <div class="card"><span class="role"><svg class="ic"><use href="#i-link"/></svg> Two phones</span><p>No laptop needed once paired. Good for two people, face to face.</p></div>
+        <div class="card"><span class="role"><svg class="ic"><use href="#i-wifi"/></svg> Two boards</span><p>No phone, no router. Good for an installation in a corner with no Wi‑Fi.</p></div>
+        <div class="card"><span class="role"><svg class="ic"><use href="#i-shapes"/></svg> Phone + board</span><p>The normal FIELD way. Everything lives on one canvas, at once.</p></div>
+      </div>
+      <div class="note why r"><span class="lbl"><svg class="ic"><use href="#i-info"/></svg> One thing does not change</span>
+        <p>However many devices you connect, each one is still just an <strong>Actor</strong> with senses and reactions. A Cue does not care if it is joining two phones, two boards, or one of each. Learn the pattern once.</p></div>
+      <div class="scrollcue r"><svg class="ic"><use href="#i-chevD"/></svg> scroll · or use back / next below</div>
+    </div>
+  </section>
+
+  <!-- 1 · TWO PHONES -->
+  <section class="fold" data-i="1">
+    <div class="inner">
+      <span class="tag r"><svg class="ic"><use href="#i-link"/></svg> Scenario 1</span>
+      <h1 class="r">Two phones, talking directly.</h1>
+      <p class="lead r">You and a friend each hold a phone. Tilt yours, and something changes on theirs — with no laptop in the room after you set it up.</p>
+      <p class="r">FIELD calls this <strong>Phone Export</strong>. Behind the name is a connection type called <strong>WebRTC</strong> — the two phones send data straight to each other, phone to phone (this direct kind of link is called <strong>P2P</strong>, short for peer‑to‑peer).</p>
+      <ol class="steps r">
+        <li><span class="act">On your computer, add two Actors — one for each phone — with the senses and reactions you want. Draw the Cues between them like normal.</span><span class="see"><b>See</b> two Actors joined by a Cue, same as any project.</span></li>
+        <li><span class="act">Open the <strong>Connect</strong> menu and choose <strong>Phone Export</strong>. Pick which Actor is Phone A and which is Phone B.</span><span class="see"><b>See</b> the export panel with two dropdowns.</span></li>
+        <li><span class="act">Click <strong>Export HTML</strong>.</span><span class="see"><b>See</b> one file download — a single page, nothing else to install.</span></li>
+        <li><span class="act">Send that one file to both phones (AirDrop, a chat message, anything) and open it in a browser on each.</span><span class="see"><b>See</b> the same page, on both phones.</span></li>
+        <li><span class="act">On each phone, tap which Actor that phone is holding.</span><span class="see"><b>See</b> a 4‑letter room code appear on the first phone.</span></li>
+        <li><span class="act">Type that same code into the second phone.</span><span class="see"><b>See</b> both phones report "connected".</span></li>
+      </ol>
+      <div class="note why r"><span class="lbl"><svg class="ic"><use href="#i-info"/></svg> What the laptop is actually for</span>
+        <p>Both phones need the FIELD server (your computer) only for a few seconds, to trade the room code — this is called <strong>signaling</strong>. After that handshake, sensor data flows phone‑to‑phone directly. You can close the laptop.</p></div>
+      <div class="note fix r"><span class="lbl"><svg class="ic"><use href="#i-info"/></svg> Good to know</span>
+        <ul>
+          <li>Works for TILT, SHAKE, TOUCH, SOUND, BUTTON, SLIDER, TOGGLE. Other sense types are skipped and the panel tells you which.</li>
+          <li>A CHORUS Cue (many senses feeding one reaction) is not supported in this export — swap it for a simpler mechanism first.</li>
+          <li>Both phones must share Wi‑Fi with the FIELD server during pairing only — not while playing.</li>
+        </ul></div>
+    </div>
+  </section>
+
+  <!-- 2 · TWO ESPS -->
+  <section class="fold" data-i="2">
+    <div class="inner">
+      <span class="tag r"><svg class="ic"><use href="#i-wifi"/></svg> Scenario 2</span>
+      <h1 class="r">Two boards, no phone, no router.</h1>
+      <p class="lead r">Two ESP32 boards send sensor data to each other over their own radio — no Wi‑Fi network required at all.</p>
+      <p class="r">FIELD calls this connection type <strong>ESP‑NOW</strong> (a feature built into the ESP32 chip itself). Good for outdoor pieces, or any spot where you cannot rely on a router.</p>
+      <div class="note why r"><span class="lbl"><svg class="ic"><use href="#i-info"/></svg> Only for ESP32</span>
+        <p>This trick needs the ESP32 chip specifically — not a classic Arduino, not an ESP8266. Picking it in FIELD switches your board choice to ESP32 automatically.</p></div>
+      <ol class="steps r">
+        <li><span class="act">Set up each board's Actor as usual — one input role, one output role, wired to real sensors and parts.</span><span class="see"><b>See</b> two Actors, each with its own hardware.</span></li>
+        <li><span class="act">Open <strong>Get Code</strong> for Board 1. In the connection choice (next to USB and Bluetooth), pick the direct‑radio option, leave the "Peer MAC" field blank, and upload.</span><span class="see"><b>See</b> the upload log end with "done".</span></li>
+        <li><span class="act">Do the same for Board 2 — direct‑radio option, Peer MAC blank, upload.</span><span class="see"><b>See</b> both boards now sending and listening over radio.</span></li>
+        <li><span class="act">If this is your only pair of ESP‑NOW boards, you're done — an empty Peer MAC field means "talk to anyone nearby", and there's no one else to confuse it with.</span><span class="see"><b>See</b> Board 1's sensor drive Board 2's output, immediately.</span></li>
+      </ol>
+      <div class="note why r"><span class="lbl"><svg class="ic"><use href="#i-info"/></svg> More than one pair in the room?</span>
+        <p>With several ESP‑NOW pairs running nearby, an empty Peer MAC field means every board also listens to every <em>other</em> pair's traffic. Lock each pair together like this:</p>
+        <ol class="steps r">
+          <li><span class="act">Read Board 1's own address off its Serial output — FIELD's own connection log works, or the Arduino IDE's Serial Monitor. It prints once at startup; you only need to catch it that one time, and this has nothing to do with the ESP‑NOW radio traffic itself.</span><span class="see"><b>See</b> a short code like <code>AA:BB:CC:DD:EE:FF</code>.</span></li>
+          <li><span class="act">Read Board 2's address the same way.</span><span class="see"><b>See</b> Board 2's own address.</span></li>
+          <li><span class="act">Paste Board 2's address into Board 1's Peer MAC field and upload again to Board 1. Paste Board 1's address into Board 2's Peer MAC field and upload again to Board 2 — each board needs the <em>other</em> one's address, so both boards get re‑flashed.</span><span class="see"><b>See</b> two fresh uploads, one per board.</span></li>
+        </ol>
+        <p>Now each board only accepts messages from the specific address you gave it, ignoring any other pair nearby.</p></div>
+      <p class="r">Turn a knob on Board 1, and whatever Board 2's output role controls — a light, a motor, a sound — reacts immediately. Same 0‑to‑1 language as everything else in FIELD, just carried over radio instead of a wire.</p>
+    </div>
+  </section>
+
+  <!-- 3 · PHONE + ESP -->
+  <section class="fold" data-i="3">
+    <div class="inner">
+      <span class="tag r"><svg class="ic"><use href="#i-shapes"/></svg> Scenario 3</span>
+      <h1 class="r">One phone, one board, both on the same canvas.</h1>
+      <p class="lead r">This is the way FIELD works most of the time. The laptop stays open and acts as the hub. Nothing needs pairing codes or MAC addresses — you just add both as Actors.</p>
+      <div class="flow r">
+        <div class="box"><small>Actor</small><b>Phone</b></div>
+        <div class="arrow"><canvas class="glyph" data-shape="arrow" width="32" height="32"></canvas></div>
+        <div class="box"><small>FIELD</small><b>your Cues</b></div>
+        <div class="arrow"><canvas class="glyph" data-shape="arrow" width="32" height="32"></canvas></div>
+        <div class="box"><small>Actor</small><b>Board</b></div>
+      </div>
+      <ol class="steps r">
+        <li><span class="act">Add a Phone Actor with an input role, and connect it the usual way — the sensor QR code, same as in Your First FIELD.</span><span class="see"><b>See</b> live values from your phone's motion or touch.</span></li>
+        <li><span class="act">Add a Board Actor. Give it an input role wired to a real sensor (a light sensor, a button) and an output role wired to a real part (an LED, a small motor).</span><span class="see"><b>See</b> both pins set in the Actor panel.</span></li>
+        <li><span class="act">Upload to the board with one‑click upload, over USB.</span><span class="see"><b>See</b> the board come alive and report values.</span></li>
+        <li><span class="act">Draw a Cue from the Phone's sense to the Board's reaction. Pick a mechanism.</span><span class="see"><b>See</b> tilting your phone move the physical part on the board.</span></li>
+        <li><span class="act">Draw a second Cue the other way — from the Board's sense to something on screen, or back to a reaction on the phone's own sketch.</span><span class="see"><b>See</b> touching the board's sensor change something on your screen.</span></li>
+      </ol>
+      <div class="note why r"><span class="lbl"><svg class="ic"><use href="#i-info"/></svg> Why start here, not with the two "no laptop" tricks</span>
+        <p>This mode is the most flexible: any Actor's sense can drive any other Actor's reaction, you can add a third or fourth Actor any time, and Scenes can turn whole groups of Cues on and off. Reach for Phone Export or ESP‑NOW only once you know you want to leave the laptop behind.</p></div>
+    </div>
+  </section>
+
+  <!-- 4 · ADD MORE INTERFACES -->
+  <section class="fold" data-i="4">
+    <div class="inner">
+      <span class="tag r"><svg class="ic"><use href="#i-grid"/></svg> Scaling up</span>
+      <h1 class="r">Now add a third, a fourth, a tenth device.</h1>
+      <p class="lead r">The model never gets bigger than four words. Only the number of Actors and Roles grows.</p>
+      <h2 class="r">More senses on one Actor</h2>
+      <p class="r">A single Actor can carry several of the same sense — say, twelve TOUCH roles for twelve buttons on one board. FIELD numbers them for you (first one plain, then "_1", "_2", and so on), and each one is still a normal Role you can draw a Cue from.</p>
+      <h2 class="r">More kinds of device, without writing code</h2>
+      <ul class="r">
+        <li><strong>OSC</strong> — bring in values from apps like TouchDesigner, Max, or Ableton.</li>
+        <li><strong>MIDI</strong> — use music gear (a keyboard, a fader box) as a sensor.</li>
+        <li><strong>MQTT</strong> — bring in a value from anywhere on the internet, like another building or a public weather feed, as if it were a local sensor.</li>
+        <li><strong>Bluetooth (BLE)</strong> — connect wireless sensor boards without a USB cable.</li>
+      </ul>
+      <p class="r">Each of these shows up in the same <strong>Connect</strong> menu you used for the phone and the board. Once connected, its values behave exactly like any other Role — 0 to 1, ready for a Cue.</p>
+      <h2 class="r">New hardware, without new role types</h2>
+      <p class="r">If you have a sensor chip FIELD does not know yet, a <strong>plugin</strong> teaches it — a single small file, no install step. A plugin never invents a new kind of sense; it only teaches an existing one (TOUCH, LIGHT, SOUND…) how to talk to one more chip. See <a href="plugins.html">Add a Custom Sensor</a> for a full walkthrough.</p>
+      <h2 class="r">A real screen as an output</h2>
+      <p class="r"><strong>Display Studio</strong> lets you design a picture for a small hardware screen — icons, text, bars — and bind pieces of it to your senses or Cues, the same way you would bind a Cue to an LED.</p>
+      <div class="note diary r"><span class="lbl"><svg class="ic"><use href="#i-pencil"/></svg> Try this</span>
+        <p>Take the phone‑and‑board project from the last chapter. Add one more device — a second phone, or an OSC value from a laptop app — and draw one new Cue into it. Notice that nothing about the first two Actors had to change.</p></div>
+    </div>
+  </section>
+
+  <!-- 5 · EXAMPLE PROJECT -->
+  <section class="fold" data-i="5">
+    <div class="inner">
+      <span class="tag r"><svg class="ic"><use href="#i-sun"/></svg> Build one · putting it together</span>
+      <h1 class="r">The Weather Duet.</h1>
+      <p class="lead r">One phone, one board, and a screen — three Actors working together, with a Scene that changes the mood.</p>
+      <p class="r">Here is what you are building: tilt your phone and a cloud drifts across a sketch. The board's real light sensor sets how bright the sky looks. Shake your phone, and a storm begins — the board's LED starts flashing along with it.</p>
+      <h2 class="r">The three Actors</h2>
+      <div class="who r">
+        <div class="card"><span class="role"><svg class="ic"><use href="#i-phone"/></svg> You</span><p>TILT and SHAKE. Your phone, connected the normal way.</p></div>
+        <div class="card"><span class="role"><svg class="ic"><use href="#i-cpu"/></svg> Board</span><p>LIGHT input from a light sensor on pin A0. GLOW output to an LED on pin 5.</p></div>
+        <div class="card"><span class="role"><svg class="ic"><use href="#i-shapes"/></svg> Screen</span><p>MOVE and GLOW outputs, drawn by a p5 sketch.</p></div>
+      </div>
+      <ol class="steps r">
+        <li><span class="act">Add all three Actors with the roles listed above. Connect Board over USB with one‑click upload; connect You with the sensor QR code.</span><span class="see"><b>See</b> three Actors on the canvas, all reporting live values.</span></li>
+        <li><span class="act">Cue 1: You.TILT → Screen.MOVE, mechanism <strong>DIAL</strong>.</span><span class="see"><b>See</b> tilt turn into a smooth 0‑to‑1 value on Screen.MOVE.</span></li>
+        <li><span class="act">Cue 2: Board.LIGHT → Screen.GLOW, mechanism <strong>DIAL</strong>.</span><span class="see"><b>See</b> the room's real light level feed a second value.</span></li>
+        <li><span class="act">Add a Scene named <strong>Storm</strong>. Cue 3, live only in Storm: You.SHAKE → Board.GLOW, mechanism <strong>LATCH</strong>, set to trigger the Storm Scene.</span><span class="see"><b>See</b> a Scene selector appear with two Scenes.</span></li>
+      </ol>
+      <p class="filename r">sketch.js</p>
+<pre class="r"><code><span class="k">function</span> setup() {
+  createCanvas(500, 300);
+}
+
+<span class="k">function</span> draw() {
+  <span class="c">// Screen.GLOW: real daylight sets how bright the sky looks.</span>
+  <span class="k">let</span> daylight = field.get('GLOW');
+  background(200 * daylight, 210 * daylight, 235);
+
+  <span class="c">// Screen.MOVE: your tilt slides the cloud left to right.</span>
+  <span class="k">let</span> tilt = field.get('MOVE');
+  <span class="k">let</span> x = tilt * 500;
+
+  fill(255);
+  ellipse(x, 90, 120, 50);       <span class="c">// the cloud</span>
+
+  <span class="c">// The active Scene's name, so the sketch can react to it too.</span>
+  <span class="k">if</span> (field.scene() === 'Storm') {
+    fill(60);
+    text('STORM', 20, 280);
+  }
+}</code></pre>
+      <div class="note why r"><span class="lbl"><svg class="ic"><use href="#i-info"/></svg> Why this counts as "putting it together"</span>
+        <p>Two different device types (phone, board) drive the same sketch, through the same 0‑to‑1 language. A Scene turns a whole group of Cues on and off at once. And the sketch never asks where a number came from — it just asks for <code>field.get(...)</code>.</p></div>
+      <div class="note diary r"><span class="lbl"><svg class="ic"><use href="#i-pencil"/></svg> Take it further</span>
+        <p>Swap Board.LIGHT for an MQTT subscription to a public weather feed. Cue 2 does not need to change — Screen.GLOW still just receives a 0‑to‑1 number, now from across the internet instead of across the room.</p></div>
+    </div>
+  </section>
+
+  <!-- 6 · WHERE NEXT -->
+  <section class="fold" data-i="6">
+    <div class="inner">
+      <span class="tag r"><svg class="ic"><use href="#i-flag"/></svg> You can wire a room now</span>
+      <h1 class="r">Two devices was the hard part. You did it three ways.</h1>
+      <p class="lead r">Phone to phone, board to board, phone to board — and a project that used two device types and a Scene at once.</p>
+      <ul class="check r">
+        <li><svg class="ic"><use href="#i-check"/></svg> Export the Weather Duet's phone side with <strong>Phone Export</strong>, and let a friend hold it.</li>
+        <li><svg class="ic"><use href="#i-check"/></svg> Add a third Actor — another board, another phone, an MQTT value — into the same project.</li>
+        <li><svg class="ic"><use href="#i-check"/></svg> Try a plugin for a sensor chip you own — see <a href="plugins.html">Add a Custom Sensor</a>.</li>
+        <li><svg class="ic"><use href="#i-check"/></svg> Design a small screen for the board in Display Studio, bound to Board.LIGHT.</li>
+      </ul>
+      <p class="r" style="margin-top:26px"><a href="learn.html">← Back to Your First FIELD</a> &nbsp;·&nbsp; <a href="index.html">FIELD home</a></p>
+    </div>
+  </section>
+
+</div>
+
+<!-- ── BOTTOM BACK / NEXT ── -->
+<div class="footbar">
+  <div class="track" id="track"></div>
+  <button class="nb back" id="backBtn"><svg class="ic"><use href="#i-arrowL"/></svg> Back</button>
+  <span class="pos">Chapter <b id="posNum">1</b> / <span id="posTot">7</span></span>
+  <button class="nb next" id="nextBtn">Next <svg class="ic"><use href="#i-arrowR"/></svg></button>
+</div>
+
+<script>
+(function () {
+  var KEY = 'field_connect_v1';
+  var folds = Array.prototype.slice.call(document.querySelectorAll('.fold'));
+  var total = folds.length;
+  var titles = [
+    ['i-compass','Welcome'], ['i-link','Two phones'], ['i-wifi','Two boards'],
+    ['i-shapes','Phone + board'], ['i-grid','Add more devices'], ['i-sun','Build: Weather Duet'],
+    ['i-flag','Where next']
+  ];
+
+  var menu = document.getElementById('menu');
+  var menuBtn = document.getElementById('menuBtn');
+  var jumpNav = document.getElementById('jumpNav');
+  var visited = {};
+  try { visited = JSON.parse(localStorage.getItem(KEY + '_visited') || '{}'); } catch (e) {}
+  titles.forEach(function (t, i) {
+    var b = document.createElement('button');
+    b.className = 'jump'; b.dataset.i = i;
+    b.innerHTML = '<span class="num">' + (i + 1) + '</span><svg class="ic"><use href="#' + t[0] + '"/></svg><span>' + t[1] + '</span><svg class="ic tick"><use href="#i-check"/></svg>';
+    b.addEventListener('click', function () { go(i); menu.classList.remove('open'); });
+    jumpNav.appendChild(b);
+  });
+  var jumps = Array.prototype.slice.call(jumpNav.children);
+  menuBtn.addEventListener('click', function () {
+    var open = menu.classList.toggle('open');
+    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  document.addEventListener('click', function (e) { if (!menu.contains(e.target)) menu.classList.remove('open'); });
+
+  var backBtn = document.getElementById('backBtn');
+  var nextBtn = document.getElementById('nextBtn');
+  var posNum = document.getElementById('posNum');
+  var track = document.getElementById('track');
+  document.getElementById('posTot').textContent = total;
+
+  function go(i) { if (i < 0) i = 0; if (i > total - 1) i = total - 1; folds[i].scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+
+  var current = -1;
+  function setActive(i) {
+    if (i === current) return;
+    current = i; visited[i] = 1;
+    folds.forEach(function (f, k) { f.classList.toggle('active', k === i); if (k === i) reveal(f); });
+    jumps.forEach(function (n, k) { n.classList.toggle('active', k === i); n.classList.toggle('done', !!visited[k] && k !== i); });
+    posNum.textContent = i + 1;
+    track.style.width = ((i + 1) / total * 100) + '%';
+    backBtn.disabled = i === 0; nextBtn.disabled = i === total - 1;
+    localStorage.setItem(KEY, i); localStorage.setItem(KEY + '_visited', JSON.stringify(visited));
+  }
+  function reveal(fold) {
+    if (fold.classList.contains('seen')) return;
+    fold.querySelectorAll('.r').forEach(function (el, idx) { el.style.transitionDelay = (idx * 65) + 'ms'; });
+    fold.classList.add('seen');
+  }
+
+  backBtn.addEventListener('click', function () { go(current - 1); });
+  nextBtn.addEventListener('click', function () { go(current + 1); });
+
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { if (e.isIntersecting) setActive(folds.indexOf(e.target)); });
+  }, { rootMargin: '-45% 0px -45% 0px', threshold: 0 });
+  folds.forEach(function (f) { io.observe(f); });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.altKey && e.key === 'ArrowDown') { e.preventDefault(); go(current + 1); }
+    if (e.altKey && e.key === 'ArrowUp') { e.preventDefault(); go(current - 1); }
+  });
+
+  var saved = parseInt(localStorage.getItem(KEY), 10);
+  if (!isNaN(saved) && saved > 0 && saved < total) {
+    setTimeout(function () { go(saved); }, 450);
+  } else {
+    reveal(folds[0]); folds[0].classList.add('active'); jumps[0].classList.add('active');
+    backBtn.disabled = true; track.style.width = (1 / total * 100) + '%';
+  }
+})();
+</script>
+<script>
+(function () {
+  function stipple(pathFn, count, box) {
+    var pts = [], tries = 0;
+    while (pts.length < count && tries < count * 30) {
+      tries++;
+      var x = box.x + Math.random() * box.w, y = box.y + Math.random() * box.h;
+      if (pathFn(x, y)) pts.push([x, y]);
+    }
+    return pts;
+  }
+  function sign(x1, y1, x2, y2, x3, y3) { return (x1 - x3) * (y2 - y3) - (x2 - x3) * (y1 - y3); }
+  var SHAPES = {
+    arrow: function (w, h) {
+      var pts = [];
+      var shaft = { x: w * 0.1, y: h * 0.42, w: w * 0.5, h: h * 0.16 };
+      pts = pts.concat(stipple(function (x, y) { return x >= shaft.x && x <= shaft.x + shaft.w && y >= shaft.y && y <= shaft.y + shaft.h; }, 40, shaft));
+      var ax = w * 0.55, ay = h * 0.18, bx = w * 0.55, by = h * 0.82, cx = w * 0.92, cy = h * 0.5;
+      var head = { x: w * 0.55, y: h * 0.18, w: w * 0.36, h: h * 0.64 };
+      pts = pts.concat(stipple(function (x, y) {
+        var d1 = sign(x, y, ax, ay, bx, by), d2 = sign(x, y, bx, by, cx, cy), d3 = sign(x, y, cx, cy, ax, ay);
+        var hasNeg = (d1 < 0) || (d2 < 0) || (d3 < 0), hasPos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+        return !(hasNeg && hasPos);
+      }, 32, head));
+      return pts;
+    }
+  };
+  var glyphs = document.querySelectorAll('canvas.glyph');
+  for (var i = 0; i < glyphs.length; i++) {
+    var cv = glyphs[i];
+    var dpr = window.devicePixelRatio || 1;
+    var w = cv.width, h = cv.height;
+    cv.width = w * dpr; cv.height = h * dpr;
+    cv.style.width = w + 'px'; cv.style.height = h + 'px';
+    var ctx = cv.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var fn = SHAPES[cv.getAttribute('data-shape')];
+    if (!fn) continue;
+    var pts = fn(w, h);
+    var color = getComputedStyle(document.body).getPropertyValue('--ink') || '#111';
+    ctx.fillStyle = color.trim() || '#111';
+    for (var j = 0; j < pts.length; j++) {
+      ctx.beginPath();
+      ctx.arc(pts[j][0], pts[j][1], 1.05, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+})();
+</script>
+</body>
+</html>

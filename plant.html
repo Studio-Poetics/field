@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>FIELD — Touch the plant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #faf9f6; --ink: #111111; --muted: #666666; --border: #111111; --accent: #7c3aed; --accent2: #c2410c;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
+    background: var(--bg); color: var(--ink);
+    font-family: 'Space Grotesk', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .mono { font-family: 'DM Mono', monospace; }
+
+  #joinScreen {
+    position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+    padding: 24px; z-index: 10;
+  }
+  .joinbox { width: 100%; max-width: 360px; text-align: center; }
+  .joinbox .kick { font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+  .joinbox h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: -.02em; text-transform: uppercase; margin: 0 0 18px; }
+  #codeInput {
+    width: 100%; font-family: 'DM Mono', monospace; font-size: 1.8rem; letter-spacing: .3em;
+    text-align: center; padding: 16px 10px; border: 2px solid var(--border); background: #fff;
+    color: var(--ink); outline: none;
+  }
+  #codeInput:focus { border-color: var(--accent); }
+  #joinBtn {
+    margin-top: 16px; width: 100%; padding: 15px; border: 2px solid var(--accent); background: var(--accent);
+    color: #fff; font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: .95rem;
+    text-transform: uppercase; letter-spacing: .04em; cursor: pointer;
+  }
+  #joinBtn:disabled { opacity: .5; }
+  #joinMsg { margin-top: 14px; font-size: .82rem; color: var(--muted); min-height: 1.2em; }
+
+  #plantScreen {
+    position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+    flex-direction: column;
+  }
+  #plantScreen.show { display: flex; }
+  #plantCanvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  #hint {
+    position: absolute; bottom: 6vh; left: 0; right: 0; text-align: center;
+    font-size: .78rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
+    z-index: 2; transition: opacity .3s linear;
+  }
+</style>
+</head>
+<body>
+
+<div id="joinScreen">
+  <div class="joinbox">
+    <div class="kick">FIELD</div>
+    <h1>Enter the code<br>from your screen</h1>
+    <input id="codeInput" class="mono" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="off">
+    <button id="joinBtn">Connect</button>
+    <div id="joinMsg"></div>
+  </div>
+</div>
+
+<div id="plantScreen">
+  <canvas id="plantCanvas"></canvas>
+  <div id="hint">Touch the plant</div>
+</div>
+
+<script>
+(function () {
+  var SIGNAL_URL = 'wss://field-pair-signal.pkch101.workers.dev';
+  var rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+
+  var joinScreen = document.getElementById('joinScreen');
+  var plantScreen = document.getElementById('plantScreen');
+  var codeInput = document.getElementById('codeInput');
+  var joinBtn = document.getElementById('joinBtn');
+  var joinMsg = document.getElementById('joinMsg');
+  var hint = document.getElementById('hint');
+
+  codeInput.addEventListener('input', function () {
+    codeInput.value = codeInput.value.replace(/\D/g, '').slice(0, 6);
+  });
+
+  var ws, pc, dc;
+
+  function setMsg(t) { joinMsg.textContent = t; }
+
+  function makeSignaling(role, code) {
+    return new WebSocket(SIGNAL_URL + '/room/' + code + '/connect?role=' + role);
+  }
+
+  async function join(code) {
+    setMsg('Connecting…');
+    joinBtn.disabled = true;
+    try { ws = makeSignaling('guest', code); } catch (e) { setMsg('Could not reach signal server.'); joinBtn.disabled = false; return; }
+
+    ws.onopen = function () {};
+    ws.onerror = function () { setMsg('Could not reach signal server.'); joinBtn.disabled = false; };
+    ws.onmessage = async function (ev) {
+      var msg;
+      try { msg = JSON.parse(ev.data); } catch (e) { return; }
+      if (msg.type === 'offer') {
+        pc = new RTCPeerConnection(rtcConfig);
+        pc.onicecandidate = function (e) { if (e.candidate) ws.send(JSON.stringify({ type: 'ice', candidate: e.candidate })); };
+        pc.ondatachannel = function (e) {
+          dc = e.channel;
+          dc.onopen = function () { showPlant(); };
+          dc.onclose = function () { setMsg('Disconnected. Reload to try again.'); };
+        };
+        await pc.setRemoteDescription(msg.offer);
+        var answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        ws.send(JSON.stringify({ type: 'answer', answer: answer }));
+      } else if (msg.type === 'ice' && pc) {
+        try { await pc.addIceCandidate(msg.candidate); } catch (e) {}
+      } else if (msg.type === 'peer-left') {
+        setMsg('The desktop disconnected.');
+      }
+    };
+  }
+
+  joinBtn.addEventListener('click', function () {
+    var code = codeInput.value.trim();
+    if (code.length !== 6) { setMsg('Enter the 6-digit code.'); return; }
+    join(code);
+  });
+
+  function showPlant() {
+    joinScreen.style.display = 'none';
+    plantScreen.classList.add('show');
+    setTimeout(function () { hint.style.opacity = 0; }, 2600);
+    initPlant();
+  }
+
+  // ── Plant render (particles sampled from Plant.png) + touch → chime + sync to desktop ─
+  function initPlant() {
+    var canvas = document.getElementById('plantCanvas');
+    var ctx = canvas.getContext('2d');
+    var W, H, dpr, cx, cy, plantTarget, scatter;
+
+    // ── Image → particle sampling (keeps the source photo's real colours) ─
+    function sampleParticles(img, desiredCount) {
+      var maxDim = 320;
+      var scale = maxDim / Math.max(img.width, img.height);
+      var w = Math.max(1, Math.round(img.width * scale));
+      var h = Math.max(1, Math.round(img.height * scale));
+      var off = document.createElement('canvas');
+      off.width = w; off.height = h;
+      var octx = off.getContext('2d', { willReadFrequently: true });
+      octx.drawImage(img, 0, 0, w, h);
+      var data = octx.getImageData(0, 0, w, h).data;
+      var candidates = [];
+      for (var y = 0; y < h; y++) {
+        for (var x = 0; x < w; x++) {
+          var idx = (y * w + x) * 4;
+          if (data[idx + 3] > 140) {
+            candidates.push({
+              rx: x / w, ry: y / h,
+              color: 'rgb(' + data[idx] + ',' + data[idx + 1] + ',' + data[idx + 2] + ')'
+            });
+          }
+        }
+      }
+      for (var i = candidates.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var t = candidates[i]; candidates[i] = candidates[j]; candidates[j] = t;
+      }
+      return { points: candidates.slice(0, Math.min(desiredCount, candidates.length)), aspect: img.width / img.height };
+    }
+
+    var plantSample = null;
+    var plantImg = new Image();
+    plantImg.onload = function () {
+      plantSample = sampleParticles(plantImg, 7000);
+      resize();
+    };
+    plantImg.src = 'Plant.png';
+
+    function layout() {
+      if (!plantSample) return;
+      var plantH = H * 0.5, plantW = plantH * plantSample.aspect;
+      var plantX = cx - plantW / 2, plantY = cy + H * 0.16 - plantH;
+      plantTarget = plantSample.points.map(function (p) {
+        return { x: plantX + p.rx * plantW, y: plantY + p.ry * plantH, color: p.color };
+      });
+      scatter = plantTarget.map(function () { return [Math.random() * W, Math.random() * H]; });
+    }
+
+    function resize() {
+      W = window.innerWidth; H = window.innerHeight;
+      dpr = window.devicePixelRatio || 1;
+      canvas.width = W * dpr; canvas.height = H * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      cx = W / 2; cy = H / 2 + Math.min(W, H) * 0.06;
+      layout();
+    }
+    window.addEventListener('resize', resize);
+
+    var t0 = performance.now();
+    var settleDur = 900;
+    var touchGlow = 0;
+    var idleT = 0;
+
+    function draw(now) {
+      idleT += 0.016;
+      ctx.clearRect(0, 0, W, H);
+      if (plantTarget) {
+        var elapsed = now - t0;
+        var t = Math.min(1, elapsed / settleDur);
+        t = t * t * (3 - 2 * t);
+        var wobble = Math.sin(idleT * 1.6) * 2.4 * (0.4 + touchGlow);
+        var size = 1.9 + touchGlow * 1.8;
+        for (var i = 0; i < plantTarget.length; i++) {
+          var a = scatter[i], b = plantTarget[i];
+          var x = a[0] + (b.x - a[0]) * t;
+          var y = a[1] + (b.y - a[1]) * t;
+          if (t > 0.9 && b.y < cy) x += wobble * ((cy - b.y) / 200);
+          ctx.fillStyle = b.color;
+          ctx.beginPath(); ctx.arc(x, y, size, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+      touchGlow *= 0.9;
+      requestAnimationFrame(draw);
+    }
+    requestAnimationFrame(draw);
+
+    // Audio
+    var audioCtx;
+    function unlockAudio() {
+      if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; } }
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+    function playChime() {
+      if (!audioCtx) return;
+      var t0 = audioCtx.currentTime;
+      var osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(640, t0);
+      osc.frequency.exponentialRampToValueAtTime(920, t0 + 0.15);
+      gain.gain.setValueAtTime(0.0001, t0);
+      gain.gain.exponentialRampToValueAtTime(0.22, t0 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.5);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(t0); osc.stop(t0 + 0.55);
+    }
+
+    function onTouch(e) {
+      e.preventDefault();
+      unlockAudio();
+      playChime();
+      touchGlow = 1;
+      if (dc && dc.readyState === 'open') {
+        try { dc.send(JSON.stringify({ type: 'touch' })); } catch (err) {}
+      }
+    }
+    canvas.addEventListener('touchstart', onTouch, { passive: false });
+    canvas.addEventListener('mousedown', onTouch);
+  }
+})();
+</script>
+</body>
+</html>

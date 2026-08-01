@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Download FIELD</title>
+<meta name="description" content="Download FIELD — a visual canvas for building physical-digital prototypes. Free desktop app for macOS and Windows." />
+<link rel="icon" href="icon.png" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg:     #faf9f6;
+    --paper:  #ffffff;
+    --text:   #111;
+    --muted:  #666;
+    --faint:  #999;
+    --border: #111;
+    --accent:  #7c3aed;
+    --accent2: #c2410c;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    line-height: 1.55;
+    font-size: 16px;
+  }
+  ::selection { background: #111; color: #fff; }
+  a { color: inherit; }
+  .mono { font-family: 'DM Mono', monospace; }
+  .lbl {
+    font-family: 'Space Grotesk', sans-serif; font-size: .72rem; font-weight: 600;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
+  }
+
+  /* ── Top bar ─────────────────────────────────────────── */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 22px 7vw; position: sticky; top: 0; z-index: 20;
+    background: rgba(250,249,246,.9); backdrop-filter: blur(8px);
+    border-bottom: 2px solid var(--border);
+  }
+  .topbar .brand { display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+  .topbar .sq { width: 14px; height: 14px; border: 2px solid #111; display: inline-block; transform: rotate(45deg); }
+  .topbar .right { font-size: .72rem; letter-spacing: .1em; color: var(--muted); text-transform: uppercase; }
+
+  .wrap { max-width: 1320px; margin: 0 auto; padding: 0 5vw 130px; counter-reset: sec; }
+
+  /* ── Scrollytelling assembly (replaces static hero) ──── */
+  h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(3rem, 6.4vw, 5.6rem); font-weight: 700; line-height: .94;
+    letter-spacing: -.03em; text-transform: uppercase;
+  }
+  .scrolly { position: relative; width: 100%; height: 640vh; border-bottom: 2px solid var(--border); }
+  .scrolly .pin {
+    position: sticky; top: 0; height: 100vh; width: 100%;
+    overflow: hidden; background: var(--bg);
+  }
+  #assemblyCanvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .scrolly .intro {
+    position: absolute; top: 44%; left: 50%; transform: translate(-50%, -50%);
+    width: 100%; max-width: 1180px; padding: 0 5vw; z-index: 4;
+    text-align: center; transition: opacity .18s linear; pointer-events: none;
+  }
+  .scrolly .intro .kick { display: flex; gap: 12px; align-items: center; justify-content: center; margin-bottom: 22px; }
+  .scrolly .intro h1 { font-size: clamp(3rem, 6.4vw, 5.6rem); white-space: nowrap; }
+  .scrolly .intro .lede {
+    margin: 24px auto 0; font-size: 1.3rem; font-weight: 500; color: var(--muted);
+    max-width: 520px; line-height: 1.45;
+  }
+  .scrolly .caption {
+    position: absolute; left: 7vw; bottom: 13vh; max-width: 480px; z-index: 4;
+    font-size: clamp(1.3rem, 2.8vw, 2rem); font-weight: 700; text-transform: uppercase;
+    letter-spacing: -.02em; line-height: 1.2; opacity: 0; transition: opacity .18s linear;
+    pointer-events: none;
+  }
+  .scrolly .caption.show { opacity: 1; }
+  .scrolly .caption .tag {
+    display: block; font-size: .72rem; letter-spacing: .14em; font-weight: 600;
+    color: var(--muted); text-transform: uppercase; margin-bottom: 10px;
+  }
+  .scrolly .scrollhint {
+    position: absolute; left: 50%; bottom: 5vh; transform: translateX(-50%);
+    font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--faint);
+    z-index: 4; transition: opacity .3s linear;
+  }
+  .scrolly .pairpanel {
+    position: absolute; inset: 0; z-index: 6; display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity .4s linear;
+  }
+  .scrolly .pairpanel.show { opacity: 1; pointer-events: auto; }
+  .pairbox {
+    border: 2px solid var(--border); background: var(--paper);
+    padding: 40px 44px 34px; max-width: 460px; width: 88vw; text-align: center;
+    box-shadow: 9px 9px 0 var(--border); position: relative;
+  }
+  .pairbox .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: .68rem; font-weight: 600; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 16px;
+  }
+  .pairbox .eyebrow .sq { width: 8px; height: 8px; border: 2px solid #111; display: inline-block; transform: rotate(45deg); }
+  .pairbox h2 { font-size: 1.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: -.01em; }
+  .pairbox p.sub { margin-top: 10px; color: var(--muted); font-size: .92rem; }
+  .pairbox .codedigits { display: flex; gap: 7px; justify-content: center; margin: 26px 0 16px; }
+  .pairbox .codedigits span {
+    width: 46px; height: 60px; border: 2px solid var(--border); background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Mono', monospace; font-size: 1.8rem; font-weight: 700;
+    transition: background .2s, color .2s;
+  }
+  .pairbox .codedigits span:nth-child(odd) { background: #f0efe9; }
+  .pairbox.is-live .codedigits span { background: #111; color: #fff; border-color: #111; }
+  .pairbox.is-live .codedigits span:nth-child(3n+1) { background: var(--accent); border-color: var(--accent); }
+  .pairbox.is-live .codedigits span:nth-child(3n+2) { background: var(--accent2); border-color: var(--accent2); }
+  .pairbox .urlrow {
+    display: inline-flex; align-items: center; gap: 8px; margin-top: 4px;
+    border: 2px solid var(--border); padding: 7px 12px; background: var(--bg);
+  }
+  .pairbox .urlrow .k { font-size: .62rem; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); }
+  .pairbox .urlhint { font-size: .82rem; color: var(--text); font-weight: 500; }
+  .pairbox .pairstatus {
+    margin-top: 22px; font-size: .85rem; color: var(--muted);
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    border-top: 2px solid var(--border); padding-top: 18px;
+  }
+  .pairbox .pairstatus .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--faint); }
+  .pairbox .pairstatus.live { color: var(--text); font-weight: 600; }
+  .pairbox .pairstatus.live .dot { background: var(--accent); animation: pulse 1.6s ease-in-out infinite; }
+  .pairbox .skip {
+    display: inline-block; margin-top: 18px; font-size: .76rem; color: var(--faint);
+    text-decoration: underline; text-underline-offset: 3px;
+  }
+  .pairbox .skip:hover { color: var(--text); }
+
+  /* ── Primary detected download ───────────────────────── */
+  .primary {
+    border: 2px solid var(--border); border-top: 5px solid var(--accent);
+    margin-top: 56px; padding: 34px 36px; background: var(--paper);
+    display: grid; grid-template-columns: 1fr auto; gap: 22px; align-items: center;
+    box-shadow: 9px 9px 0 var(--border); transition: box-shadow .2s, transform .2s;
+  }
+  .primary:hover { box-shadow: 5px 5px 0 var(--border); transform: translate(4px, 4px); }
+  .primary .meta .label { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
+  .primary .meta .label .dot { width: 7px; height: 7px; background: var(--accent); border-radius: 50%; display: inline-block; animation: pulse 1.8s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+  .primary .meta h2 { font-family: 'Space Grotesk', sans-serif; font-size: 2.1rem; font-weight: 700; letter-spacing: -.02em; text-transform: uppercase; }
+  .primary .meta .sub { color: var(--muted); font-size: .95rem; margin-top: 6px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 14px; white-space: nowrap;
+    background: #111; color: #fff; text-decoration: none;
+    font-size: .88rem; font-weight: 500;
+    padding: 16px 26px; border: 2px solid #111; transition: .25s;
+  }
+  .btn:hover { background: #fff; color: #111; }
+  .btn .arw { font-size: 1.05rem; }
+  .primary .alt { grid-column: 1 / -1; font-size: .82rem; color: var(--faint); margin-top: 2px; }
+  .primary .alt a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+  .primary .alt a:hover { color: #111; }
+
+  /* ── Section shell ───────────────────────────────────── */
+  section { margin-top: 118px; counter-increment: sec; }
+  .head { display: flex; align-items: baseline; gap: 18px; margin-bottom: 32px; padding-bottom: 16px; border-bottom: 3px solid var(--border); }
+  .head::before {
+    content: counter(sec, decimal-leading-zero);
+    font-family: 'DM Mono', monospace; font-size: 1.05rem; font-weight: 500;
+    color: var(--accent); letter-spacing: .04em; flex-shrink: 0;
+  }
+  .head h2 { font-family: 'Space Grotesk', sans-serif; font-size: 2.3rem; font-weight: 700; letter-spacing: -.02em; text-transform: uppercase; }
+  .head .tail { margin-left: auto; color: var(--faint); font-size: .95rem; }
+
+  /* ── Download modules ────────────────────────────────── */
+  .modules { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); border: 2px solid var(--border); }
+  .recap-grid { grid-template-columns: repeat(4, 1fr); }
+  .mod { background: var(--paper); display: flex; flex-direction: column; transition: background .2s; }
+  .mod:not(.pending):hover { background: #fbfaf7; }
+  .mod .bar { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; border-bottom: 2px solid var(--border); }
+  .mod .bar .os { font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; font-weight: 700; text-transform: uppercase; }
+  .mod .bar .you { font-size: .6rem; letter-spacing: .1em; text-transform: uppercase; color: #fff; background: #111; padding: 3px 8px; }
+  .mod .body { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 16px; flex: 1; }
+  .mod .arch { font-size: .82rem; color: var(--muted); line-height: 1.5; }
+  .mod .dls { display: flex; flex-direction: column; gap: 8px; margin-top: auto; }
+  .mod .dls a {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    text-decoration: none; border: 2px solid var(--border);
+    padding: 11px 14px; font-weight: 500; font-size: .9rem; transition: .2s;
+  }
+  .mod .dls a .k { font-size: .68rem; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); font-weight: 400; }
+  .mod .dls a.lead { background: #111; color: #fff; border-color: #111; }
+  .mod .dls a.lead .k { color: #999; }
+  .mod .dls a:hover { background: #111; color: #fff; border-color: #111; }
+  .mod .dls a:hover .k { color: rgba(255,255,255,.7); }
+  .mod .soon { font-size: .82rem; color: var(--faint); line-height: 1.5; margin-top: auto; }
+  .mod.pending { background: repeating-linear-gradient(135deg, var(--paper), var(--paper) 9px, #f2f0ea 9px, #f2f0ea 18px); }
+
+  .note {
+    margin-top: 22px; font-size: .9rem; color: var(--muted); line-height: 1.6;
+    border: 2px solid var(--border); padding: 16px 18px; background: var(--paper); position: relative;
+  }
+  .note::before {
+    content: '!'; font-weight: 600; display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px; background: #111; color: #fff;
+    border-radius: 50%; margin-right: 10px; font-size: .78rem; vertical-align: -4px;
+  }
+  .note b { font-weight: 600; color: var(--text); }
+
+  /* ── Install steps ───────────────────────────────────── */
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); border: 2px solid var(--border); }
+  .step { background: var(--paper); padding: 20px 18px 22px; border-top: 4px solid var(--border); transition: background .2s; }
+  .step:hover { background: #fbfaf7; }
+  .step:nth-child(4n+2) { border-top-color: var(--accent); }
+  .step:nth-child(4n+4) { border-top-color: var(--accent2); }
+  .step .n { font-family: 'Space Grotesk', sans-serif; font-size: 2rem; font-weight: 700; color: var(--faint); line-height: 1; }
+  .step p { margin-top: 14px; font-size: .9rem; color: var(--muted); line-height: 1.5; }
+  .step p b { font-weight: 600; color: var(--text); }
+
+  /* ── Guides ──────────────────────────────────────────── */
+  .guides { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); border: 2px solid var(--border); }
+  .guide {
+    background: var(--paper); text-decoration: none; color: inherit;
+    display: flex; flex-direction: column; transition: background .2s, transform .2s;
+  }
+  .guide:hover { background: #f5f4ef; transform: translateY(-3px); }
+  .guide .gbar { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 2px solid var(--border); }
+  .guide .gnum { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1.3rem; color: var(--faint); }
+  .guide:nth-child(3n+1) .gnum { color: var(--accent); }
+  .guide:nth-child(3n+2) .gnum { color: var(--accent2); }
+  .guide .gtag { font-size: .62rem; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); text-align: right; }
+  .guide .gbody { padding: 18px 16px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
+  .guide h3 { font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; font-weight: 700; letter-spacing: -.01em; text-transform: uppercase; line-height: 1.1; }
+  .guide .desc { color: var(--muted); font-size: .88rem; line-height: 1.45; }
+  .guide code { font-size: .82em; background: #f0efe9; color: var(--text); padding: 1px 5px; }
+  .guide dl { display: grid; gap: 3px; }
+  .guide dt { font-size: .62rem; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); margin-top: 6px; }
+  .guide dd { font-size: .84rem; color: var(--muted); line-height: 1.4; }
+  .guide .go { margin-top: auto; font-size: .78rem; font-weight: 500; letter-spacing: .02em; color: var(--text); padding-top: 8px; }
+  .guide:hover .go { color: var(--muted); }
+  .agentnote {
+    margin-top: 20px; font-size: .82rem; color: var(--muted);
+    line-height: 1.6; border-top: 2px solid var(--border); padding-top: 16px;
+  }
+  .agentnote b { color: var(--text); font-weight: 600; }
+
+  footer {
+    margin-top: 90px; padding: 26px 0 4px; border-top: 2px solid var(--border);
+    font-size: .82rem; color: var(--muted); line-height: 1.8;
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+  }
+  footer .flinks { display: flex; gap: 22px; flex-wrap: wrap; }
+  footer a { color: var(--text); text-decoration: none; border-bottom: 2px solid var(--border); padding-bottom: 1px; transition: color .2s, border-color .2s; }
+  footer a:hover { color: var(--accent); border-color: var(--accent); }
+
+  @media (max-width: 900px) {
+    h1 { font-size: 3.4rem; }
+    .scrolly .intro .lede { font-size: 1.1rem; }
+    .scrolly .caption { font-size: 1.15rem; bottom: 16vh; }
+  }
+  @media (max-width: 560px) {
+    .scrolly .intro h1 { white-space: normal; font-size: 2.4rem; }
+  }
+  @media (max-width: 820px) {
+    .modules, .guides { grid-template-columns: 1fr; }
+    .recap-grid { grid-template-columns: repeat(2, 1fr); }
+    .steps { grid-template-columns: repeat(2, 1fr); }
+    section { margin-top: 76px; }
+    .head h2 { font-size: 1.7rem; }
+    .primary { padding: 26px 24px; }
+  }
+  @media (max-width: 560px) {
+    .primary { grid-template-columns: 1fr; }
+    .btn { justify-content: center; }
+    .steps { grid-template-columns: 1fr; }
+    .recap-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><span class="sq"></span>FIELD</div>
+  <div class="right" id="verTag">V0.1.8 · DESKTOP · LOCAL-FIRST</div>
+</div>
+
+<section class="scrolly" id="assembly">
+  <div class="pin">
+    <canvas id="assemblyCanvas"></canvas>
+
+    <div class="intro" id="introText">
+      <div class="kick lbl">Physical–digital prototyping toolkit</div>
+      <h1>Wire the real world<br>to a living canvas.</h1>
+      <p class="lede">Connect phones, sensors and boards to visuals and sound — no code required. Free, open, and it runs entirely on your machine.</p>
+    </div>
+
+    <div class="caption" data-band="0">
+      <span class="tag">Actor</span>A plant is a thing in your world. FIELD calls it an Actor.
+    </div>
+    <div class="caption" data-band="1">
+      <span class="tag">Role</span>Touch is one sense it can have. FIELD calls that an Input Role.
+    </div>
+    <div class="caption" data-band="2">
+      <span class="tag">Cue</span>A speaker joins the scene — another Actor. The line between them is a Cue.
+    </div>
+    <div class="caption" data-band="3">
+      <span class="tag">Mechanism</span>Inside that Cue is a Mechanism — the rule that turns touch into sound.
+    </div>
+    <div class="caption" data-band="4">
+      <span class="tag">Scene</span>This is FIELD's whole idea: physical things, wired to reactions, live.
+    </div>
+
+    <div class="scrollhint" id="scrollHint">Scroll ↓</div>
+
+    <div class="pairpanel" id="pairPanel">
+      <div class="pairbox" id="pairBox">
+        <span class="eyebrow"><span class="sq"></span>Live demo</span>
+        <h2>Connect your phone</h2>
+        <p class="sub">Open this on your phone. It'll show just the plant.</p>
+        <div class="codedigits" id="codeDigits"><span>·</span><span>·</span><span>·</span><span>·</span><span>·</span><span>·</span></div>
+        <div class="urlrow"><span class="k">URL</span><span class="urlhint" id="urlHint">plant.html</span></div>
+        <div class="pairstatus" id="pairStatus"><span class="dot"></span>Waiting for a phone…</div>
+        <a class="skip" href="learn.html">Skip — take me to the tutorial →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="wrap">
+
+  <!-- Auto-detected primary download -->
+  <div class="primary" id="primary">
+    <div class="meta">
+      <div class="label lbl"><span class="dot"></span> <span id="pLabel">Detecting your system…</span></div>
+      <h2 id="pTitle">Download FIELD</h2>
+      <div class="sub" id="pSub">Choose the build for your machine below.</div>
+    </div>
+    <a class="btn" id="pBtn" href="#all"><span id="pBtnText">See all downloads</span> <span class="arw">→</span></a>
+    <div class="alt" id="pAlt"></div>
+  </div>
+
+  <!-- All platforms -->
+  <section id="all">
+    <div class="head">
+      <h2>Downloads</h2>
+      <span class="tail lbl">4 builds</span>
+    </div>
+
+    <div class="modules">
+
+      <div class="mod row" data-os="mac">
+        <div class="bar">
+          <span class="os">macOS</span>
+          <span class="you" data-you hidden>Your system</span>
+        </div>
+        <div class="body">
+          <div class="arch">Universal binary<br>Apple Silicon &amp; Intel · macOS 11+</div>
+          <div class="dls">
+            <a class="lead" href="https://github.com/Studio-Poetics/field/releases/download/v0.1.8/FIELD-0.1.8-universal.dmg">.dmg <span class="k">Installer</span></a>
+            <a href="https://github.com/Studio-Poetics/field/releases/download/v0.1.8/FIELD-0.1.8-universal-mac.zip">.zip <span class="k">Portable</span></a>
+          </div>
+        </div>
+      </div>
+
+      <div class="mod row" data-os="win">
+        <div class="bar">
+          <span class="os">Windows</span>
+          <span class="you" data-you hidden>Your system</span>
+        </div>
+        <div class="body">
+          <div class="arch">64-bit<br>Windows 10 / 11</div>
+          <div class="dls">
+            <a class="lead" href="https://github.com/Studio-Poetics/field/releases/download/v0.1.8/FIELD.Setup.0.1.8.exe">.exe <span class="k">Installer</span></a>
+            <a href="https://github.com/Studio-Poetics/field/releases/download/v0.1.8/FIELD-0.1.8-win.zip">.zip <span class="k">Portable</span></a>
+          </div>
+        </div>
+      </div>
+
+      <div class="mod pending row" data-os="linux">
+        <div class="bar">
+          <span class="os">Linux</span>
+        </div>
+        <div class="body">
+          <div class="arch">Debian · Ubuntu · Fedora</div>
+          <div class="soon">Packaged build in progress.<br>Run from source for now.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <p class="note">
+      <b>First launch.</b> The app is not code-signed yet, so your OS asks once.
+      On <b>macOS</b>: right-click FIELD → Open → Open. On <b>Windows</b>: More info → Run anyway.
+    </p>
+  </section>
+
+  <!-- After you install -->
+  <section>
+    <div class="head">
+      <h2>Install &amp; first run</h2>
+      <span class="tail lbl">≈ 3 min</span>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="n">01</div><p>Open <b>FIELD</b>. It starts a small server on your computer.</p></div>
+      <div class="step"><div class="n">02</div><p>Put your <b>phone and computer on the same Wi-Fi</b>.</p></div>
+      <div class="step"><div class="n">03</div><p>Open the <b>Sensors</b> panel. Scan the QR code with your phone.</p></div>
+      <div class="step"><div class="n">04</div><p>Draw a <b>Cue</b> from a sensor to an output. Tilt your phone — the canvas responds.</p></div>
+    </div>
+  </section>
+
+  <!-- Learn & build -->
+  <section>
+    <div class="head">
+      <h2>Learn &amp; build</h2>
+      <span class="tail lbl">5 guides</span>
+    </div>
+
+    <div class="guides">
+
+      <a class="guide" href="learn.html">
+        <div class="gbar">
+          <span class="gnum">01</span>
+          <span class="gtag">No code<br>In the app</span>
+        </div>
+        <div class="gbody">
+          <h3>First FIELD</h3>
+          <p class="desc">Make one working connection: your phone's tilt or touch moves something on the canvas.</p>
+          <dl>
+            <dt>Use it when</dt><dd>You just installed FIELD and want a first prototype fast.</dd>
+            <dt>How to start</dt><dd>Open it, get phone + computer on one Wi-Fi, follow each step.</dd>
+          </dl>
+          <span class="go">Open guide →</span>
+        </div>
+      </a>
+
+      <a class="guide" href="connect.html">
+        <div class="gbar">
+          <span class="gnum">02</span>
+          <span class="gtag">No code<br>In the app</span>
+        </div>
+        <div class="gbody">
+          <h3>Connect Two Things</h3>
+          <p class="desc">Two phones, two boards, or a phone and a board — talking to each other or to one canvas.</p>
+          <dl>
+            <dt>Use it when</dt><dd>One sensor works and you're ready to combine more than one.</dd>
+            <dt>How to start</dt><dd>Finish "First FIELD" first, then open this guide.</dd>
+          </dl>
+          <span class="go">Open guide →</span>
+        </div>
+      </a>
+
+      <a class="guide" href="pair.html">
+        <div class="gbar">
+          <span class="gnum">★</span>
+          <span class="gtag">Try it now<br>No install</span>
+        </div>
+        <div class="gbody">
+          <h3>Live Pairing Demo</h3>
+          <p class="desc">Open this page on your phone and your computer. Enter a 6-digit code to pair them, then shake or swipe your phone and watch a shape react live — right in the browser.</p>
+          <dl>
+            <dt>Use it when</dt><dd>You want to feel what FIELD does before installing anything.</dd>
+            <dt>How to start</dt><dd>Open it on two devices — no FIELD app required.</dd>
+          </dl>
+          <span class="go">Try the demo →</span>
+        </div>
+      </a>
+
+      <a class="guide" href="plugins.html">
+        <div class="gbar">
+          <span class="gnum">03</span>
+          <span class="gtag">No code<br>In the app</span>
+        </div>
+        <div class="gbody">
+          <h3>Add a Custom Sensor</h3>
+          <p class="desc">Step-by-step: write, install, and test a plugin for a sensor chip FIELD doesn't know yet.</p>
+          <dl>
+            <dt>Use it when</dt><dd>Your chip isn't built in and you want a guided walkthrough, not just a spec.</dd>
+            <dt>How to start</dt><dd>Open it — no download, reads right in your browser.</dd>
+          </dl>
+          <span class="go">Open guide →</span>
+        </div>
+      </a>
+
+      <a class="guide" href="ai-coding.html">
+        <div class="gbar">
+          <span class="gnum">04</span>
+          <span class="gtag">Code<br>p5.js &amp; web</span>
+        </div>
+        <div class="gbody">
+          <h3>Build with JavaScript</h3>
+          <p class="desc">Read live FIELD values in your own sketch or web page via <code>field-bridge.js</code>. Every value is 0–1.</p>
+          <dl>
+            <dt>Use it when</dt><dd>You want custom visuals, sound, or a page that reacts in real time.</dd>
+            <dt>How to start</dt><dd>Open it — no download, one worked example, then the spec.</dd>
+          </dl>
+          <span class="go">Open guide →</span>
+        </div>
+      </a>
+
+      <a class="guide" href="ai-coding.html">
+        <div class="gbar">
+          <span class="gnum">05</span>
+          <span class="gtag">Hardware<br>Plugin spec</span>
+        </div>
+        <div class="gbody">
+          <h3>Plugin file spec (for AI)</h3>
+          <p class="desc">The same <code>.field-plugin.json</code> format as guide 03, written for an AI coding assistant to read.</p>
+          <dl>
+            <dt>Use it when</dt><dd>You'd rather describe your chip to an AI agent than hand-write the file.</dd>
+            <dt>How to start</dt><dd>Open it — no download, one worked example, then the spec.</dd>
+          </dl>
+          <span class="go">Open guide →</span>
+        </div>
+      </a>
+
+    </div>
+
+    <p class="agentnote"><b>&gt; guides 04 &amp; 05 lead to one page.</b> It walks through a worked ESP32 + p5.js example, then links both machine-readable specs — read them yourself, or paste them into an AI coding tool (Claude, Cursor, …) and let it generate correct FIELD code for you.</p>
+  </section>
+
+  <!-- Recap: four words -->
+  <section id="recap">
+    <div class="head">
+      <h2>Four words</h2>
+      <span class="tail lbl">Everything else is built from these</span>
+    </div>
+    <div class="modules recap-grid">
+      <div class="mod row">
+        <div class="bar"><span class="os">Actor</span></div>
+        <div class="body" style="align-items:center; text-align:center; display:flex; flex-direction:column; gap:10px;">
+          <canvas class="glyph" data-shape="square" width="64" height="64" style="width:64px;height:64px;"></canvas>
+          <div class="arch">A named thing in the world. The plant, the speaker, your phone.</div>
+        </div>
+      </div>
+      <div class="mod row">
+        <div class="bar"><span class="os">Role</span></div>
+        <div class="body" style="align-items:center; text-align:center; display:flex; flex-direction:column; gap:10px;">
+          <canvas class="glyph" data-shape="circle" width="64" height="64" style="width:64px;height:64px;"></canvas>
+          <div class="arch">One sense or reaction an Actor has — touch, tilt, glow, sound.</div>
+        </div>
+      </div>
+      <div class="mod row">
+        <div class="bar"><span class="os">Cue</span></div>
+        <div class="body" style="align-items:center; text-align:center; display:flex; flex-direction:column; gap:10px;">
+          <canvas class="glyph" data-shape="arrow" width="64" height="64" style="width:64px;height:64px;"></canvas>
+          <div class="arch">The line you draw from one Actor's Role to another's.</div>
+        </div>
+      </div>
+      <div class="mod row">
+        <div class="bar"><span class="os">Mechanism</span></div>
+        <div class="body" style="align-items:center; text-align:center; display:flex; flex-direction:column; gap:10px;">
+          <canvas class="glyph" data-shape="triangle" width="64" height="64" style="width:64px;height:64px;"></canvas>
+          <div class="arch">The rule living inside a Cue — how input becomes output.</div>
+        </div>
+      </div>
+    </div>
+    <p class="agentnote" style="text-align:center; border-top:none; padding-top:0;">
+      <a class="btn" href="learn.html" style="display:inline-flex; margin-top:10px;"><span>Follow the full tutorial</span> <span class="arw">→</span></a>
+    </p>
+  </section>
+
+  <footer>
+    <span>Everything runs locally — no cloud, no account, no tracking.</span>
+    <span><a href="https://field.poetics.studio/">field.poetics.studio</a> · Poetics Research &amp; Innovation Studio</span>
+  </footer>
+
+</div>
+
+<script>
+  // ── OS auto-detect ──────────────────────────────────────────────
+  (function () {
+    var ua = navigator.userAgent || '';
+    var platform = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '';
+    var p = (platform + ' ' + ua).toLowerCase();
+
+    var os = 'other';
+    if (/win/.test(p)) os = 'win';
+    else if (/mac/.test(p) || /iphone|ipad|ipod/.test(p)) os = 'mac';
+    else if (/linux|x11|android/.test(p)) os = 'linux';
+
+    var base = 'https://github.com/Studio-Poetics/field/releases/download/v0.1.8/';
+    var rec = { label: '', title: '', sub: '', href: '#all', btn: 'See all downloads', alt: '', card: null };
+
+    if (os === 'win') {
+      rec.label = 'Detected · Windows';
+      rec.title = 'FIELD for Windows';
+      rec.sub = 'Windows 10 / 11 · 64-bit installer.';
+      rec.href = base + 'FIELD.Setup.0.1.8.exe';
+      rec.btn = 'Download .exe';
+      rec.alt = 'No installer? <a href="' + base + 'FIELD-0.1.8-win.zip">Portable .zip</a>';
+      rec.card = 'win';
+    } else if (os === 'mac') {
+      rec.label = 'Detected · macOS';
+      rec.title = 'FIELD for macOS';
+      rec.sub = 'Universal build — Apple Silicon and Intel.';
+      rec.href = base + 'FIELD-0.1.8-universal.dmg';
+      rec.btn = 'Download .dmg';
+      rec.alt = 'No installer? <a href="' + base + 'FIELD-0.1.8-universal-mac.zip">Portable .zip</a>';
+      rec.card = 'mac';
+    } else if (os === 'linux') {
+      rec.label = 'Detected · Linux';
+      rec.title = 'No packaged Linux build yet';
+      rec.sub = 'Run FIELD from source, or use the macOS / Windows build.';
+    } else {
+      rec.label = 'System not detected';
+      rec.title = 'Download FIELD';
+      rec.sub = 'Pick the build for your machine below.';
+    }
+
+    document.getElementById('pLabel').textContent = rec.label;
+    document.getElementById('pTitle').textContent = rec.title;
+    document.getElementById('pSub').textContent = rec.sub;
+    var btn = document.getElementById('pBtn');
+    btn.setAttribute('href', rec.href);
+    document.getElementById('pBtnText').textContent = rec.btn;
+    document.getElementById('pAlt').innerHTML = rec.alt;
+
+    if (rec.card) {
+      var row = document.querySelector('.row[data-os="' + rec.card + '"]');
+      if (row) { var y = row.querySelector('[data-you]'); if (y) y.hidden = false; }
+    }
+  })();
+</script>
+
+<script>
+  // ── Small glyph renderer (recap section, four words) ────────────
+  (function () {
+    function stipple(pathFn, count, box) {
+      var pts = [], tries = 0;
+      while (pts.length < count && tries < count * 30) {
+        tries++;
+        var x = box.x + Math.random() * box.w, y = box.y + Math.random() * box.h;
+        if (pathFn(x, y)) pts.push([x, y]);
+      }
+      return pts;
+    }
+    function sign(x1, y1, x2, y2, x3, y3) { return (x1 - x3) * (y2 - y3) - (x2 - x3) * (y1 - y3); }
+    var SHAPES = {
+      square: function (w, h) {
+        var box = { x: w * 0.18, y: h * 0.18, w: w * 0.64, h: h * 0.64 };
+        return stipple(function (x, y) { return x >= box.x && x <= box.x + box.w && y >= box.y && y <= box.y + box.h; }, 90, box);
+      },
+      circle: function (w, h) {
+        var cx = w / 2, cy = h / 2, r = w * 0.38;
+        var box = { x: cx - r, y: cy - r, w: r * 2, h: r * 2 };
+        return stipple(function (x, y) { var dx = (x - cx) / r, dy = (y - cy) / r; return dx * dx + dy * dy <= 1; }, 90, box);
+      },
+      triangle: function (w, h) {
+        var box = { x: w * 0.08, y: h * 0.14, w: w * 0.84, h: h * 0.74 };
+        var ax = w / 2, ay = h * 0.12, bx = w * 0.9, by = h * 0.88, cx = w * 0.1, cy = h * 0.88;
+        return stipple(function (x, y) {
+          var d1 = sign(x, y, ax, ay, bx, by), d2 = sign(x, y, bx, by, cx, cy), d3 = sign(x, y, cx, cy, ax, ay);
+          var hasNeg = (d1 < 0) || (d2 < 0) || (d3 < 0), hasPos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+          return !(hasNeg && hasPos);
+        }, 90, box);
+      },
+      arrow: function (w, h) {
+        var pts = [];
+        var shaft = { x: w * 0.1, y: h * 0.42, w: w * 0.5, h: h * 0.16 };
+        pts = pts.concat(stipple(function (x, y) { return x >= shaft.x && x <= shaft.x + shaft.w && y >= shaft.y && y <= shaft.y + shaft.h; }, 55, shaft));
+        var head = { x: w * 0.55, y: h * 0.18, w: w * 0.36, h: h * 0.64 };
+        var ax = w * 0.55, ay = h * 0.18, bx = w * 0.55, by = h * 0.82, cx = w * 0.92, cy = h * 0.5;
+        pts = pts.concat(stipple(function (x, y) {
+          var d1 = sign(x, y, ax, ay, bx, by), d2 = sign(x, y, bx, by, cx, cy), d3 = sign(x, y, cx, cy, ax, ay);
+          var hasNeg = (d1 < 0) || (d2 < 0) || (d3 < 0), hasPos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+          return !(hasNeg && hasPos);
+        }, 45, head));
+        return pts;
+      }
+    };
+    var ink = getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#111';
+    document.querySelectorAll('canvas.glyph').forEach(function (cv) {
+      var dpr = window.devicePixelRatio || 1;
+      var w = cv.width, h = cv.height;
+      cv.width = w * dpr; cv.height = h * dpr;
+      var ctx = cv.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      var pts = SHAPES[cv.getAttribute('data-shape')](w, h);
+      ctx.fillStyle = ink;
+      pts.forEach(function (p) { ctx.beginPath(); ctx.arc(p[0], p[1], 1.3, 0, Math.PI * 2); ctx.fill(); });
+    });
+  })();
+</script>
+
+<script>
+  // ── Scrollytelling assembly: scatter dots → plant → speaker → pair ──
+  (function () {
+    // ── Image → particle sampling (keeps the source photo's colours) ─
+    function sampleParticles(img, desiredCount) {
+      var maxDim = 320;
+      var scale = maxDim / Math.max(img.width, img.height);
+      var w = Math.max(1, Math.round(img.width * scale));
+      var h = Math.max(1, Math.round(img.height * scale));
+      var off = document.createElement('canvas');
+      off.width = w; off.height = h;
+      var octx = off.getContext('2d', { willReadFrequently: true });
+      octx.drawImage(img, 0, 0, w, h);
+      var data = octx.getImageData(0, 0, w, h).data;
+      var candidates = [];
+      for (var y = 0; y < h; y++) {
+        for (var x = 0; x < w; x++) {
+          var idx = (y * w + x) * 4;
+          if (data[idx + 3] > 140) {
+            candidates.push({
+              rx: x / w, ry: y / h,
+              color: 'rgb(' + data[idx] + ',' + data[idx + 1] + ',' + data[idx + 2] + ')'
+            });
+          }
+        }
+      }
+      for (var i = candidates.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var t = candidates[i]; candidates[i] = candidates[j]; candidates[j] = t;
+      }
+      return { points: candidates.slice(0, Math.min(desiredCount, candidates.length)), aspect: img.width / img.height };
+    }
+
+    var canvas = document.getElementById('assemblyCanvas');
+    var ctx = canvas.getContext('2d');
+    var track = document.getElementById('assembly');
+    var introEl = document.getElementById('introText');
+    var hintEl = document.getElementById('scrollHint');
+    var panelEl = document.getElementById('pairPanel');
+    var captions = Array.prototype.slice.call(document.querySelectorAll('.caption[data-band]'));
+
+    var W = 0, H = 0, dpr = 1;
+    var plantSample = null, speakerSample = null;
+    var plantTarget = [], speakerTarget = [], scatterA = [], scatterB = [];
+    var plantAnchor = { x: 0, y: 0 }, speakerAnchor = { x: 0, y: 0 };
+    var doodleSeeds = [];
+
+    function clamp01(v) { return Math.max(0, Math.min(1, v)); }
+    function map01(v, a, b) { return clamp01((v - a) / (b - a)); }
+    function ease(t) { return t * t * (3 - 2 * t); }
+    function lerp(a, b, t) { return a + (b - a) * t; }
+
+    function layout() {
+      if (!plantSample || !speakerSample) return;
+      // Below ~640px the figures are sized as a fraction of viewport HEIGHT,
+      // which on a tall narrow phone screen makes them wider than the
+      // available width — they'd overlap each other and the cue line drawn
+      // between them. Shrink and pull them further apart on narrow viewports.
+      var narrow = W < 640;
+      var baseline = H * (narrow ? 0.68 : 0.74);
+      var plantH = H * (narrow ? 0.30 : 0.46), plantW = plantH * plantSample.aspect;
+      var speakerH = H * (narrow ? 0.20 : 0.28), speakerW = speakerH * speakerSample.aspect;
+
+      var maxFigW = W * (narrow ? 0.42 : 0.5) - 16;
+      if (plantW > maxFigW) { plantH *= maxFigW / plantW; plantW = maxFigW; }
+      if (speakerW > maxFigW) { speakerH *= maxFigW / speakerW; speakerW = maxFigW; }
+
+      var plantCx = W * (narrow ? 0.27 : 0.37);
+      var speakerCx = W * (narrow ? 0.75 : 0.68);
+      var plantX = plantCx - plantW / 2, plantY = baseline - plantH;
+      var speakerX = speakerCx - speakerW / 2, speakerY = baseline - speakerH;
+
+      plantTarget = plantSample.points.map(function (p) {
+        return { x: plantX + p.rx * plantW, y: plantY + p.ry * plantH, color: p.color, reveal: p.ry * 0.6 + p.rx * 0.4 };
+      });
+      speakerTarget = speakerSample.points.map(function (p) {
+        return { x: speakerX + p.rx * speakerW, y: speakerY + p.ry * speakerH, color: p.color, reveal: p.ry * 0.6 + p.rx * 0.4 };
+      });
+
+      plantAnchor = { x: plantX + plantW * 0.86, y: plantY + plantH * 0.42 };
+      speakerAnchor = { x: speakerX + speakerW * 0.12, y: speakerY + speakerH * 0.4 };
+
+      doodleSeeds = [];
+      [{ cx: plantX + plantW / 2, cy: plantY + plantH / 2, rx: plantW * 0.75, ry: plantH * 0.62 },
+       { cx: speakerX + speakerW / 2, cy: speakerY + speakerH / 2, rx: speakerW * 0.95, ry: speakerH * 0.85 }
+      ].forEach(function (box, gi) {
+        for (var k = 0; k < 5; k++) {
+          var ang = (k / 5) * Math.PI * 2 + gi * 0.6;
+          doodleSeeds.push({
+            x: box.cx + Math.cos(ang) * box.rx,
+            y: box.cy + Math.sin(ang) * box.ry,
+            kind: k % 3,
+            size: 8 + (k % 3) * 3,
+            rot: ang,
+            phase: Math.random() * Math.PI * 2,
+            speed: 0.8 + Math.random() * 0.6
+          });
+        }
+      });
+    }
+
+    function resize() {
+      W = window.innerWidth; H = window.innerHeight;
+      dpr = window.devicePixelRatio || 1;
+      canvas.width = W * dpr; canvas.height = H * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      layout();
+      scatterA = plantTarget.map(function () { return [Math.random() * W, Math.random() * H]; });
+      scatterB = speakerTarget.map(function () { return [W * 0.68 + (Math.random() - 0.5) * W * 0.6, Math.random() * H]; });
+    }
+
+    var progress = 0;
+    function updateProgress() {
+      var rect = track.getBoundingClientRect();
+      var total = rect.height - H;
+      progress = total > 0 ? clamp01(-rect.top / total) : 0;
+    }
+
+    var touchGlow = 0;
+    var idleT = 0;
+    var connected = false, connectedAt = 0, doodleAnimAt = 0;
+
+    var ink = '#111111', muted = '#666666';
+    (function () {
+      var cs = getComputedStyle(document.documentElement);
+      ink = (cs.getPropertyValue('--text') || ink).trim() || ink;
+      muted = (cs.getPropertyValue('--muted') || muted).trim() || muted;
+    })();
+
+    // ── Doodles: hand-drawn line art around plant + speaker, animated stroke-in + wiggle, no emoji ─
+    function quadAt(p0, c, p1, tt) {
+      var mt = 1 - tt;
+      return [mt * mt * p0[0] + 2 * mt * tt * c[0] + tt * tt * p1[0], mt * mt * p0[1] + 2 * mt * tt * c[1] + tt * tt * p1[1]];
+    }
+    function strokePartialQuad(p0, c, p1, tt) {
+      if (tt <= 0) return;
+      ctx.moveTo(p0[0], p0[1]);
+      var steps = 10;
+      for (var i = 1; i <= steps; i++) {
+        var pt = quadAt(p0, c, p1, (i / steps) * tt);
+        ctx.lineTo(pt[0], pt[1]);
+      }
+    }
+    function drawSparkle(x, y, s, rot, t) {
+      ctx.save();
+      ctx.translate(x, y); ctx.rotate(rot);
+      ctx.beginPath();
+      var g = s * t;
+      ctx.moveTo(0, 0); ctx.lineTo(-g, 0);
+      ctx.moveTo(0, 0); ctx.lineTo(g, 0);
+      ctx.moveTo(0, 0); ctx.lineTo(0, -g);
+      ctx.moveTo(0, 0); ctx.lineTo(0, g);
+      ctx.moveTo(0, 0); ctx.lineTo(-g * 0.6, -g * 0.6);
+      ctx.moveTo(0, 0); ctx.lineTo(g * 0.6, g * 0.6);
+      ctx.moveTo(0, 0); ctx.lineTo(-g * 0.6, g * 0.6);
+      ctx.moveTo(0, 0); ctx.lineTo(g * 0.6, -g * 0.6);
+      ctx.stroke();
+      ctx.restore();
+    }
+    function drawRing(x, y, r, t) {
+      ctx.beginPath();
+      ctx.ellipse(x, y, r, r * 0.85, 0.15, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * t);
+      ctx.stroke();
+    }
+    function drawSquiggle(x, y, s, t) {
+      var p0 = [x - s, y], c1 = [x - s * 0.3, y - s * 0.7], p1 = [x, y], c2 = [x + s * 0.3, y + s * 0.7], p2 = [x + s, y];
+      ctx.beginPath();
+      if (t <= 0.5) {
+        strokePartialQuad(p0, c1, p1, t / 0.5);
+      } else {
+        ctx.moveTo(p0[0], p0[1]);
+        ctx.quadraticCurveTo(c1[0], c1[1], p1[0], p1[1]);
+        strokePartialQuad(p1, c2, p2, (t - 0.5) / 0.5);
+      }
+      ctx.stroke();
+    }
+    var doodleColors = ['#7c3aed', '#c2410c', '#111111'];
+    function drawDoodles(rawT) {
+      if (rawT <= 0.001 || !doodleSeeds.length) return;
+      ctx.save();
+      ctx.lineWidth = 1.5;
+      ctx.lineCap = 'round';
+      doodleSeeds.forEach(function (d, i) {
+        var stagger = i * 0.07;
+        var localRaw = clamp01((rawT - stagger) / (1 - stagger));
+        var localT = ease(localRaw);
+        if (localT <= 0.001) return;
+        var wiggleRot = Math.sin(idleT * d.speed + d.phase) * 0.12 * localT;
+        var wiggleSize = 1 + Math.sin(idleT * d.speed * 1.3 + d.phase) * 0.06 * localT;
+        var s = d.size * (0.7 + 0.3 * localT) * wiggleSize;
+        var wx = d.x + Math.cos(d.phase) * 1.2 * Math.sin(idleT * 0.6 + d.phase) * localT;
+        var wy = d.y + Math.sin(d.phase) * 1.2 * Math.cos(idleT * 0.6 + d.phase) * localT;
+        ctx.globalAlpha = localT;
+        ctx.strokeStyle = doodleColors[d.kind];
+        if (d.kind === 0) drawSparkle(wx, wy, s, d.rot + idleT * 0.15 + wiggleRot, localT);
+        else if (d.kind === 1) drawRing(wx, wy, s, localT);
+        else drawSquiggle(wx, wy, s, localT);
+      });
+      ctx.restore();
+    }
+
+    // ── Cue line: the directed connection from plant to speaker ──────
+    function drawCueLine(t) {
+      if (t <= 0.001) return;
+      var x = lerp(plantAnchor.x, speakerAnchor.x, t);
+      var y = lerp(plantAnchor.y, speakerAnchor.y, t);
+      ctx.save();
+      ctx.strokeStyle = ink;
+      ctx.lineWidth = 1.5;
+      ctx.lineCap = 'round';
+      ctx.setLineDash([1, 7]);
+      ctx.beginPath();
+      ctx.moveTo(plantAnchor.x, plantAnchor.y);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      if (t > 0.92) {
+        var ang = Math.atan2(speakerAnchor.y - plantAnchor.y, speakerAnchor.x - plantAnchor.x);
+        var ah = 7;
+        ctx.beginPath();
+        ctx.moveTo(speakerAnchor.x, speakerAnchor.y);
+        ctx.lineTo(speakerAnchor.x - ah * Math.cos(ang - 0.5), speakerAnchor.y - ah * Math.sin(ang - 0.5));
+        ctx.moveTo(speakerAnchor.x, speakerAnchor.y);
+        ctx.lineTo(speakerAnchor.x - ah * Math.cos(ang + 0.5), speakerAnchor.y - ah * Math.sin(ang + 0.5));
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      if (t > 0.55) {
+        var labelT = clamp01((t - 0.55) / 0.35);
+        var mx = (plantAnchor.x + speakerAnchor.x) / 2;
+        var my = (plantAnchor.y + speakerAnchor.y) / 2;
+        ctx.save();
+        ctx.globalAlpha *= labelT;
+        ctx.font = "600 12px 'DM Mono', monospace";
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        var label = 'TOUCH → PLAY SOUND';
+        var padX = 10, padY = 6;
+        var tw = ctx.measureText(label).width;
+        ctx.fillStyle = '#faf9f6';
+        ctx.fillRect(mx - tw / 2 - padX, my - 14 - padY, tw + padX * 2, 14 + padY * 2 - 4);
+        ctx.strokeStyle = ink;
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(mx - tw / 2 - padX, my - 14 - padY, tw + padX * 2, 14 + padY * 2 - 4);
+        ctx.fillStyle = ink;
+        ctx.fillText(label, mx, my - 14 - padY + (14 + padY * 2 - 4) / 2);
+        ctx.restore();
+      }
+    }
+
+    function draw() {
+      idleT += 0.016;
+      ctx.clearRect(0, 0, W, H);
+
+      // Each phase's caption window is deliberately kept OPEN until well
+      // after its visual has fully assembled (not just started) — captions
+      // used to close before the particles finished forming, so the text
+      // vanished mid-assembly. Widening .scrolly's track height (above)
+      // also spreads the same fractions over more physical scroll distance,
+      // so each phase needs roughly two full scroll gestures to clear.
+      var plantT = ease(map01(progress, 0.05, 0.22));
+      var speakerT = ease(map01(progress, 0.32, 0.46));
+      var cueT = ease(map01(progress, 0.48, 0.64));
+      var panelT = ease(map01(progress, 0.90, 0.98));
+
+      // intro / hint fade — finishes just before the first caption opens
+      introEl.style.opacity = progress < 0.03 ? 1 : Math.max(0, 1 - (progress - 0.03) / 0.10);
+      hintEl.style.opacity = progress < 0.03 ? 1 : 0;
+
+      // captions — each range starts once its visual is mostly formed and
+      // holds well past full formation, and consecutive ranges touch (no
+      // dead gap where nothing is on screen between phases).
+      captions.forEach(function (el) {
+        var band = parseInt(el.getAttribute('data-band'), 10);
+        var ranges = [[0.14, 0.30], [0.30, 0.46], [0.46, 0.62], [0.62, 0.76], [0.76, 0.90]];
+        var r = ranges[band];
+        el.classList.toggle('show', progress >= r[0] && progress <= r[1]);
+      });
+
+      // pairing panel — hides once a phone has connected, even if still scrolled into view
+      if (panelT > 0.02 && !connected) { panelEl.classList.add('show'); } else { panelEl.classList.remove('show'); }
+      var canvasAlpha = connected ? 1 : 1 - panelT * 0.65;
+
+      var wobble = Math.sin(idleT * 1.6) * 3 * (0.4 + touchGlow);
+      var glowSize = 1.9 + touchGlow * 1.6;
+
+      // plant — particles sampled from Plant.png, real colours preserved.
+      // A spatial reveal key (not index) staggers particles into a diagonal
+      // sweep instead of popping in together; alpha tracks each particle's
+      // own reveal progress, so nothing is visible before scroll begins.
+      var spread = 0.72;
+      for (var i = 0; i < plantTarget.length; i++) {
+        var a = scatterA[i], b = plantTarget[i];
+        var localT = clamp01((plantT - b.reveal * spread) / (1 - spread));
+        var te = ease(localT);
+        var x = lerp(a[0], b.x, te);
+        var y = lerp(a[1], b.y, te);
+        if (progress > 0.5) { x += wobble * 0.3; }
+        ctx.globalAlpha = canvasAlpha * te;
+        ctx.fillStyle = b.color;
+        ctx.beginPath(); ctx.arc(x, y, glowSize, 0, Math.PI * 2); ctx.fill();
+      }
+
+      // speaker — particles sampled from Speaker.png, real colours preserved
+      for (var j = 0; j < speakerTarget.length; j++) {
+        var a2 = scatterB[j], b2 = speakerTarget[j];
+        var localT2 = clamp01((speakerT - b2.reveal * spread) / (1 - spread));
+        var te2 = ease(localT2);
+        var x2 = lerp(a2[0], b2.x, te2);
+        var y2 = lerp(a2[1], b2.y, te2);
+        if (touchGlow > 0.05) { x2 -= wobble * 0.2; }
+        ctx.globalAlpha = canvasAlpha * te2;
+        ctx.fillStyle = b2.color;
+        var r2 = 1.7 + (touchGlow > 0.05 ? touchGlow * 1.2 : 0);
+        ctx.beginPath(); ctx.arc(x2, y2, r2, 0, Math.PI * 2); ctx.fill();
+      }
+
+      ctx.globalAlpha = canvasAlpha;
+      if (cueT > 0.001) { drawCueLine(cueT); }
+
+      var connectedRaw = connected ? clamp01((performance.now() - doodleAnimAt) / 2600) : 0;
+      drawDoodles(connectedRaw);
+
+      ctx.globalAlpha = 1;
+      touchGlow *= 0.94;
+      requestAnimationFrame(draw);
+    }
+
+    window.addEventListener('resize', resize);
+    window.addEventListener('scroll', function () { updateProgress(); }, { passive: true });
+
+    var plantImg = new Image(), speakerImg = new Image();
+    var loaded = 0;
+    function onImageLoaded() {
+      loaded++;
+      if (loaded < 2) return;
+      plantSample = sampleParticles(plantImg, 7000);
+      speakerSample = sampleParticles(speakerImg, 3500);
+      resize(); updateProgress();
+      requestAnimationFrame(draw);
+    }
+    plantImg.onload = onImageLoaded;
+    speakerImg.onload = onImageLoaded;
+    plantImg.src = 'Plant.png';
+    speakerImg.src = 'Speaker.png';
+
+    // ── Audio (chime on touch sync from phone) ──────────────────────
+    var audioCtx;
+    function unlockAudio() {
+      if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; } }
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+    window.addEventListener('scroll', unlockAudio, { once: true, passive: true });
+    window.addEventListener('pointerdown', unlockAudio, { once: true });
+
+    function playChime() {
+      if (!audioCtx) return;
+      var t0 = audioCtx.currentTime;
+      var osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(640, t0);
+      osc.frequency.exponentialRampToValueAtTime(920, t0 + 0.15);
+      gain.gain.setValueAtTime(0.0001, t0);
+      gain.gain.exponentialRampToValueAtTime(0.22, t0 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.5);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(t0); osc.stop(t0 + 0.55);
+    }
+
+    // ── WebRTC host pairing (adapted from pair.html) ─────────────────
+    var SIGNAL_URL = 'wss://field-pair-signal.pkch101.workers.dev';
+    var rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+
+    function randomCode() {
+      return String(Math.floor(100000 + (crypto.getRandomValues(new Uint32Array(1))[0] / 4294967295) * 900000));
+    }
+    function makeSignaling(role, code) {
+      return new WebSocket(SIGNAL_URL + '/room/' + code + '/connect?role=' + role);
+    }
+
+    var pc, dc, ws, roomCode;
+    var codeDigitsEl = document.getElementById('codeDigits');
+    var statusEl = document.getElementById('pairStatus');
+    var urlHintEl = document.getElementById('urlHint');
+    var pairBoxEl = document.getElementById('pairBox');
+
+    urlHintEl.textContent = (location.origin && location.origin.indexOf('http') === 0 ? location.origin + '/' : '') + 'plant.html';
+
+    function renderCode(code) {
+      var spans = codeDigitsEl.querySelectorAll('span');
+      for (var i = 0; i < spans.length; i++) spans[i].textContent = code[i];
+    }
+    function setStatus(state) {
+      if (state === 'waiting') { statusEl.className = 'pairstatus'; statusEl.innerHTML = '<span class="dot"></span>Waiting for a phone…'; pairBoxEl.classList.remove('is-live'); }
+      else if (state === 'connecting') { statusEl.className = 'pairstatus'; statusEl.innerHTML = '<span class="dot"></span>Connecting…'; pairBoxEl.classList.remove('is-live'); }
+      else if (state === 'live') { statusEl.className = 'pairstatus live'; statusEl.innerHTML = '<span class="dot"></span>Connected — touch the plant on your phone'; pairBoxEl.classList.add('is-live'); }
+      else if (state === 'error') { statusEl.className = 'pairstatus'; statusEl.innerHTML = '<span class="dot"></span>Signal unavailable — try again later'; pairBoxEl.classList.remove('is-live'); }
+    }
+
+    async function createOffer() {
+      pc = new RTCPeerConnection(rtcConfig);
+      dc = pc.createDataChannel('gestures');
+      dc.onopen = function () { setStatus('live'); connected = true; connectedAt = performance.now(); doodleAnimAt = connectedAt; };
+      dc.onclose = function () { setStatus('waiting'); connected = false; };
+      dc.onmessage = function (ev) {
+        var msg;
+        try { msg = JSON.parse(ev.data); } catch (e) { return; }
+        if (msg.type === 'touch') { touchGlow = 1; playChime(); doodleAnimAt = performance.now(); }
+      };
+      pc.onicecandidate = function (ev) { if (ev.candidate) ws.send(JSON.stringify({ type: 'ice', candidate: ev.candidate })); };
+      var offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      ws.send(JSON.stringify({ type: 'offer', offer: offer }));
+    }
+
+    function startHost() {
+      roomCode = randomCode();
+      renderCode(roomCode);
+      setStatus('waiting');
+      try { ws = makeSignaling('host', roomCode); } catch (e) { setStatus('error'); return; }
+      ws.onmessage = async function (ev) {
+        var msg;
+        try { msg = JSON.parse(ev.data); } catch (e) { return; }
+        if (msg.type === 'peer-joined') { setStatus('connecting'); await createOffer(); }
+        else if (msg.type === 'peer-left') { setStatus('waiting'); if (pc) { pc.close(); pc = null; } }
+        else if (msg.type === 'answer' && pc) { await pc.setRemoteDescription(msg.answer); }
+        else if (msg.type === 'ice' && pc) { try { await pc.addIceCandidate(msg.candidate); } catch (e) {} }
+      };
+      ws.onerror = function () { setStatus('error'); };
+    }
+
+    startHost();
+  })();
+</script>
+</body>
+</html>
