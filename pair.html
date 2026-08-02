@@ -114,6 +114,7 @@
     margin-top: 40px; border: 3px solid var(--line); background: var(--paper);
     height: 40vh; display: flex; align-items: center; justify-content: center;
     text-align: center; flex-direction: column; gap: 10px; user-select: none;
+    touch-action: none; overscroll-behavior: none;
   }
   .touchsurface h3 { font-size: 1.3rem; font-weight: 700; text-transform: uppercase; }
   .touchsurface p { color: var(--muted); font-size: .9rem; max-width: 30ch; }
@@ -122,6 +123,31 @@
 
   .hidden { display: none !important; }
   footer { padding: 30px 6vw; border-top: 3px solid var(--line); font-size: .78rem; color: var(--muted); text-align: center; }
+
+  /* ── Phone (guest) layout: everything fits one screen, nothing hidden, no scroll ── */
+  body.phone-active {
+    height: 100dvh; overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  body.phone-active .topbar { flex: none; padding: 2vh 5vw; }
+  body.phone-active .wrap {
+    flex: 1; min-height: 0; padding: 2vh 6vw;
+    display: flex; flex-direction: column;
+  }
+  body.phone-active #guest-view {
+    flex: 1; min-height: 0; display: flex; flex-direction: column;
+  }
+  body.phone-active #guest-view h1 { font-size: clamp(1.4rem, 6vw, 2rem); line-height: 1; }
+  body.phone-active #guest-view .lede { margin-top: 1.4vh; font-size: .92rem; }
+  body.phone-active #guest-view .entry { margin-top: 2vh; }
+  body.phone-active #guest-view .entry input { font-size: 1.3rem; padding: 10px 12px; width: 160px; }
+  body.phone-active #guest-view .entry button { padding: 10px 20px; }
+  body.phone-active #guest-view .status { margin-top: 1.6vh; }
+  body.phone-active #guest-controls {
+    flex: 1; min-height: 0; display: flex; flex-direction: column;
+  }
+  body.phone-active .touchsurface { flex: 1; min-height: 0; height: auto; margin-top: 2vh; }
+  body.phone-active footer { flex: none; padding: 1.4vh 6vw; }
 </style>
 </head>
 <body>
@@ -214,7 +240,7 @@
   function show(view) { views.forEach(v => $(v).classList.toggle('hidden', v !== view)); }
 
   $('pick-host').onclick = () => { show('host-view'); startHost(); };
-  $('pick-guest').onclick = () => { show('guest-view'); };
+  $('pick-guest').onclick = () => { show('guest-view'); document.body.classList.add('phone-active'); };
 
   // ── shared WebRTC plumbing ──────────────────────────────
   function makeSignaling(role, code) {
@@ -331,13 +357,16 @@
     return { points: candidates.slice(0, Math.min(desiredCount, candidates.length)), aspect: img.width / img.height };
   }
 
-  let plantSample = null, cakeSample = null;
+  let plantSample = null, cakeSample = null, leafSample = null;
   const plantImg = new Image();
   plantImg.onload = () => { plantSample = sampleParticles(plantImg, 850); treePts = null; };
   plantImg.src = 'Plant.png';
   const cakeImg = new Image();
   cakeImg.onload = () => { cakeSample = sampleParticles(cakeImg, 850); cakePts = null; };
   cakeImg.src = 'cake.png';
+  const leafImg = new Image();
+  leafImg.onload = () => { leafSample = sampleParticles(leafImg, 35); };
+  leafImg.src = 'leaf.png';
 
   let treePts = null, cakePts = null;
 
@@ -345,6 +374,59 @@
     const h = ch * 0.5, w = h * sample.aspect;
     const x0 = cx - w / 2, y0 = cy + ch * 0.16 - h;
     return { pts: sample.points.map((p) => ({ x: x0 + p.rx * w, y: y0 + p.ry * h, rx: p.rx, ry: p.ry, color: p.color })), cx };
+  }
+
+  // ── falling leaves (tree only): spawn near the foliage, drift down, fade before the floor ──
+  let leaves = [];
+  let nextLeafAt = 0;
+  function spawnLeaf(cx, cy) {
+    const w = ch * 0.5 * (plantSample ? plantSample.aspect : 0.6);
+    const foliageY0 = cy + ch * 0.16 - ch * 0.5;
+    leaves.push({
+      x: cx + (Math.random() - 0.5) * w * 0.7,
+      y: foliageY0 + Math.random() * ch * 0.18,
+      vy: 0.5 + Math.random() * 0.4,
+      sway: 8 + Math.random() * 10,
+      phase: Math.random() * Math.PI * 2,
+      rot: Math.random() * Math.PI * 2,
+      vrot: (Math.random() - 0.5) * 0.03,
+      size: 16 + Math.random() * 6,
+      floorY: cy + ch * 0.16,
+      born: performance.now(),
+    });
+  }
+  function drawLeaves(cx, cy) {
+    if (!leafSample) return;
+    const now = performance.now();
+    if (now > nextLeafAt) {
+      spawnLeaf(cx, cy);
+      nextLeafAt = now + 1800 + Math.random() * 2600;
+    }
+    leaves = leaves.filter((leaf) => {
+      const t = (now - leaf.born) / 1000;
+      leaf.y += leaf.vy;
+      const dx = Math.sin(t * 1.6 + leaf.phase) * leaf.sway * 0.02;
+      leaf.x += dx;
+      leaf.rot += leaf.vrot;
+      const fadeStart = leaf.floorY - ch * 0.14;
+      let alpha = 1;
+      if (leaf.y > fadeStart) {
+        alpha = Math.max(0, 1 - (leaf.y - fadeStart) / (ch * 0.14));
+      }
+      if (alpha <= 0.02 || leaf.y > leaf.floorY) return false;
+      ctx2d.save();
+      ctx2d.globalAlpha = alpha;
+      ctx2d.translate(leaf.x, leaf.y);
+      ctx2d.rotate(leaf.rot);
+      leafSample.points.forEach((p) => {
+        ctx2d.fillStyle = p.color;
+        ctx2d.beginPath();
+        ctx2d.arc((p.rx - 0.5) * leaf.size * leafSample.aspect, (p.ry - 0.5) * leaf.size, 1, 0, Math.PI * 2);
+        ctx2d.fill();
+      });
+      ctx2d.restore();
+      return true;
+    });
   }
 
   function draw() {
@@ -366,6 +448,7 @@
           ctx2d.fill();
         });
       }
+      drawLeaves(cx, cy);
     } else {
       if (cakeSample && (!cakePts || cakePts.cx !== cx)) cakePts = layoutSample(cakeSample, cx, cy);
       if (cakePts) {
@@ -468,7 +551,8 @@
     surf.addEventListener('touchstart', (e) => {
       const t = e.touches[0];
       startX = t.clientX; startY = t.clientY; startT = Date.now();
-    });
+    }, { passive: true });
+    surf.addEventListener('touchmove', (e) => { e.preventDefault(); }, { passive: false });
     surf.addEventListener('touchend', (e) => {
       if (startX === null) return;
       const t = e.changedTouches[0];
