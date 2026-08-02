@@ -230,26 +230,8 @@
     }
     requestAnimationFrame(draw);
 
-    // Audio
-    var chimeSrc = (function () {
-      var probe = document.createElement('audio');
-      return probe.canPlayType('audio/mp4; codecs="mp4a.40.2"') ? 'plant.m4a' : 'plant.mp3';
-    })();
-    var chimeAudio = new Audio(chimeSrc);
-    chimeAudio.preload = 'auto';
-    function unlockAudio() {
-      chimeAudio.play().then(function () { chimeAudio.pause(); chimeAudio.currentTime = 0; }).catch(function () {});
-    }
-    function playChime() {
-      var el = chimeAudio.currentTime === 0 && chimeAudio.paused ? chimeAudio : chimeAudio.cloneNode(true);
-      el.currentTime = 0;
-      el.play().catch(function () {});
-    }
-
     function onTouch(e) {
       e.preventDefault();
-      unlockAudio();
-      playChime();
       touchGlow = 1;
       if (dc && dc.readyState === 'open') {
         try { dc.send(JSON.stringify({ type: 'touch' })); } catch (err) {}
