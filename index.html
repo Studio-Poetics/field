@@ -186,6 +186,8 @@
   .mod .bar .you { font-size: .6rem; letter-spacing: .1em; text-transform: uppercase; color: #fff; background: #111; padding: 3px 8px; }
   .mod .body { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 16px; flex: 1; }
   .mod .arch { font-size: .82rem; color: var(--muted); line-height: 1.5; }
+  .recap-grid .glyph-photo { width: 64px; height: 64px; object-fit: contain; filter: grayscale(100%) contrast(1.15); }
+  .recap-grid .glyph-icon { width: 64px; height: 64px; stroke: var(--text); fill: none; stroke-width: 1.4; }
   .mod .dls { display: flex; flex-direction: column; gap: 8px; margin-top: auto; }
   .mod .dls a {
     display: flex; align-items: center; justify-content: space-between; gap: 10px;
@@ -299,19 +301,19 @@
     </div>
 
     <div class="caption" data-band="0">
-      <span class="tag">Actor</span>A plant is a thing in your world. FIELD calls it an Actor.
+      <span class="tag">Actor</span>Start with what's real. A plant is an Actor — a thing in your world that can act.
     </div>
     <div class="caption" data-band="1">
-      <span class="tag">Role</span>Touch is one sense it can have. FIELD calls that an Input Role.
+      <span class="tag">Role</span>Give it a Role. This plant can sense touch — that's its Input Role.
     </div>
     <div class="caption" data-band="2">
-      <span class="tag">Cue</span>A speaker joins the scene — another Actor. The line between them is a Cue.
+      <span class="tag">Cue</span>Bring in a second Actor — a speaker. Decide when they should react to each other. That's a Cue.
     </div>
     <div class="caption" data-band="3">
-      <span class="tag">Mechanism</span>Inside that Cue is a Mechanism — the rule that turns touch into sound.
+      <span class="tag">Mechanism</span>Then choose how it plays out. The Mechanism is the exact manner touch becomes sound.
     </div>
     <div class="caption" data-band="4">
-      <span class="tag">Scene</span>This is FIELD's whole idea: physical things, wired to reactions, live.
+      <span class="tag">Scene</span>Pick your Actors, give them Roles, connect them with a Cue, choose a Mechanism. FIELD handles the rest.
     </div>
 
     <div class="scrollhint" id="scrollHint">Scroll ↓</div>
@@ -492,7 +494,7 @@
         </div>
         <div class="gbody">
           <h3>Build with JavaScript</h3>
-          <p class="desc">Read live FIELD values in your own sketch or web page via <code>field-bridge.js</code>. Every value is 0–1.</p>
+          <p class="desc">Read live FIELD values in your own sketch or web page via <code>field-bridge.js</code> — for when you'd rather write code than use the canvas.</p>
           <dl>
             <dt>Use it when</dt><dd>You want custom visuals, sound, or a page that reacts in real time.</dd>
             <dt>How to start</dt><dd>Open it — no download, one worked example, then the spec.</dd>
@@ -532,29 +534,29 @@
       <div class="mod row">
         <div class="bar"><span class="os">Actor</span></div>
         <div class="body" style="align-items:center; text-align:center; display:flex; flex-direction:column; gap:10px;">
-          <canvas class="glyph" data-shape="square" width="64" height="64" style="width:64px;height:64px;"></canvas>
-          <div class="arch">A named thing in the world. The plant, the speaker, your phone.</div>
+          <img class="glyph-photo" src="Plant.png" alt="A plant, used as an example Actor" width="64" height="64">
+          <div class="arch">An Actor is anything in your physical surroundings that acts or performs an action. For example: a plant, a speaker, or a phone.</div>
         </div>
       </div>
       <div class="mod row">
         <div class="bar"><span class="os">Role</span></div>
         <div class="body" style="align-items:center; text-align:center; display:flex; flex-direction:column; gap:10px;">
-          <canvas class="glyph" data-shape="circle" width="64" height="64" style="width:64px;height:64px;"></canvas>
-          <div class="arch">One sense or reaction an Actor has — touch, tilt, glow, sound.</div>
+          <svg class="glyph-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>
+          <div class="arch">A Role is the job an Actor plays. It can sense something, like touch or tilt. Or it can react to something, like glow or sound.</div>
         </div>
       </div>
       <div class="mod row">
         <div class="bar"><span class="os">Cue</span></div>
         <div class="body" style="align-items:center; text-align:center; display:flex; flex-direction:column; gap:10px;">
-          <canvas class="glyph" data-shape="arrow" width="64" height="64" style="width:64px;height:64px;"></canvas>
-          <div class="arch">The line you draw from one Actor's Role to another's.</div>
+          <svg class="glyph-icon" viewBox="0 0 24 24"><line x1="4" y1="12" x2="18" y2="12"/><polyline points="12 6 18 12 12 18"/></svg>
+          <div class="arch">A Cue is the rule for when and how two Actors act together. It is the line you draw between them.</div>
         </div>
       </div>
       <div class="mod row">
         <div class="bar"><span class="os">Mechanism</span></div>
         <div class="body" style="align-items:center; text-align:center; display:flex; flex-direction:column; gap:10px;">
-          <canvas class="glyph" data-shape="triangle" width="64" height="64" style="width:64px;height:64px;"></canvas>
-          <div class="arch">The rule living inside a Cue — how input becomes output.</div>
+          <svg class="glyph-icon" viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="9" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="11" cy="18" r="2"/></svg>
+          <div class="arch">A Mechanism is the exact way the action plays out. You pick it inside a Cue.</div>
         </div>
       </div>
     </div>
@@ -623,66 +625,6 @@
       var row = document.querySelector('.row[data-os="' + rec.card + '"]');
       if (row) { var y = row.querySelector('[data-you]'); if (y) y.hidden = false; }
     }
-  })();
-</script>
-
-<script>
-  // ── Small glyph renderer (recap section, four words) ────────────
-  (function () {
-    function stipple(pathFn, count, box) {
-      var pts = [], tries = 0;
-      while (pts.length < count && tries < count * 30) {
-        tries++;
-        var x = box.x + Math.random() * box.w, y = box.y + Math.random() * box.h;
-        if (pathFn(x, y)) pts.push([x, y]);
-      }
-      return pts;
-    }
-    function sign(x1, y1, x2, y2, x3, y3) { return (x1 - x3) * (y2 - y3) - (x2 - x3) * (y1 - y3); }
-    var SHAPES = {
-      square: function (w, h) {
-        var box = { x: w * 0.18, y: h * 0.18, w: w * 0.64, h: h * 0.64 };
-        return stipple(function (x, y) { return x >= box.x && x <= box.x + box.w && y >= box.y && y <= box.y + box.h; }, 90, box);
-      },
-      circle: function (w, h) {
-        var cx = w / 2, cy = h / 2, r = w * 0.38;
-        var box = { x: cx - r, y: cy - r, w: r * 2, h: r * 2 };
-        return stipple(function (x, y) { var dx = (x - cx) / r, dy = (y - cy) / r; return dx * dx + dy * dy <= 1; }, 90, box);
-      },
-      triangle: function (w, h) {
-        var box = { x: w * 0.08, y: h * 0.14, w: w * 0.84, h: h * 0.74 };
-        var ax = w / 2, ay = h * 0.12, bx = w * 0.9, by = h * 0.88, cx = w * 0.1, cy = h * 0.88;
-        return stipple(function (x, y) {
-          var d1 = sign(x, y, ax, ay, bx, by), d2 = sign(x, y, bx, by, cx, cy), d3 = sign(x, y, cx, cy, ax, ay);
-          var hasNeg = (d1 < 0) || (d2 < 0) || (d3 < 0), hasPos = (d1 > 0) || (d2 > 0) || (d3 > 0);
-          return !(hasNeg && hasPos);
-        }, 90, box);
-      },
-      arrow: function (w, h) {
-        var pts = [];
-        var shaft = { x: w * 0.1, y: h * 0.42, w: w * 0.5, h: h * 0.16 };
-        pts = pts.concat(stipple(function (x, y) { return x >= shaft.x && x <= shaft.x + shaft.w && y >= shaft.y && y <= shaft.y + shaft.h; }, 55, shaft));
-        var head = { x: w * 0.55, y: h * 0.18, w: w * 0.36, h: h * 0.64 };
-        var ax = w * 0.55, ay = h * 0.18, bx = w * 0.55, by = h * 0.82, cx = w * 0.92, cy = h * 0.5;
-        pts = pts.concat(stipple(function (x, y) {
-          var d1 = sign(x, y, ax, ay, bx, by), d2 = sign(x, y, bx, by, cx, cy), d3 = sign(x, y, cx, cy, ax, ay);
-          var hasNeg = (d1 < 0) || (d2 < 0) || (d3 < 0), hasPos = (d1 > 0) || (d2 > 0) || (d3 > 0);
-          return !(hasNeg && hasPos);
-        }, 45, head));
-        return pts;
-      }
-    };
-    var ink = getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#111';
-    document.querySelectorAll('canvas.glyph').forEach(function (cv) {
-      var dpr = window.devicePixelRatio || 1;
-      var w = cv.width, h = cv.height;
-      cv.width = w * dpr; cv.height = h * dpr;
-      var ctx = cv.getContext('2d');
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      var pts = SHAPES[cv.getAttribute('data-shape')](w, h);
-      ctx.fillStyle = ink;
-      pts.forEach(function (p) { ctx.beginPath(); ctx.arc(p[0], p[1], 1.3, 0, Math.PI * 2); ctx.fill(); });
-    });
   })();
 </script>
 

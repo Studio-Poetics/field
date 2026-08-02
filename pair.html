@@ -288,7 +288,7 @@
     if (msg.type === 'swipe' && hostShape === 'cake') cutAnim = { t: 0, dir: Math.sign(msg.dx) || 1 };
   }
 
-  // ── stippled shape rendering ────────────────────────────
+  // ── photo-particle shape rendering (real colours, sampled from Plant.png / Cake.png) ─
   let cw = 0, ch = 0, ctx2d;
   function setupCanvas() {
     const cv = $('host-canvas');
@@ -299,82 +299,99 @@
       cw = rect.width; ch = rect.height;
       cv.width = cw * dpr; cv.height = ch * dpr;
       ctx2d.setTransform(dpr, 0, 0, dpr, 0, 0);
+      treePts = null; cakePts = null;
     };
     resize();
     window.addEventListener('resize', resize);
   }
 
-  function stipple(pathFn, count, box) {
-    const pts = [];
-    let tries = 0;
-    while (pts.length < count && tries < count * 30) {
-      tries++;
-      const x = box.x + Math.random() * box.w;
-      const y = box.y + Math.random() * box.h;
-      if (pathFn(x, y)) pts.push([x, y]);
+  function sampleParticles(img, desiredCount) {
+    const maxDim = 320;
+    const scale = maxDim / Math.max(img.width, img.height);
+    const w = Math.max(1, Math.round(img.width * scale));
+    const h = Math.max(1, Math.round(img.height * scale));
+    const off = document.createElement('canvas');
+    off.width = w; off.height = h;
+    const octx = off.getContext('2d', { willReadFrequently: true });
+    octx.drawImage(img, 0, 0, w, h);
+    const data = octx.getImageData(0, 0, w, h).data;
+    const candidates = [];
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const idx = (y * w + x) * 4;
+        if (data[idx + 3] > 140) {
+          candidates.push({ rx: x / w, ry: y / h, color: `rgb(${data[idx]},${data[idx + 1]},${data[idx + 2]})` });
+        }
+      }
     }
-    return pts;
+    for (let i = candidates.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const t = candidates[i]; candidates[i] = candidates[j]; candidates[j] = t;
+    }
+    return { points: candidates.slice(0, Math.min(desiredCount, candidates.length)), aspect: img.width / img.height };
   }
+
+  let plantSample = null, cakeSample = null;
+  const plantImg = new Image();
+  plantImg.onload = () => { plantSample = sampleParticles(plantImg, 850); treePts = null; };
+  plantImg.src = 'Plant.png';
+  const cakeImg = new Image();
+  cakeImg.onload = () => { cakeSample = sampleParticles(cakeImg, 850); cakePts = null; };
+  cakeImg.src = 'cake.png';
 
   let treePts = null, cakePts = null;
 
-  function buildTree(cx, cy) {
-    const trunk = { x: cx - 14, y: cy + 10, w: 28, h: 90 };
-    const trunkPts = stipple((x, y) => x >= trunk.x && x <= trunk.x + trunk.w && y >= trunk.y && y <= trunk.y + trunk.h, 90, trunk);
-    const foliageBox = { x: cx - 130, y: cy - 190, w: 260, h: 220 };
-    const foliagePts = stipple((x, y) => {
-      const dx = (x - cx) / 130, dy = (y - (cy - 90)) / 110;
-      return dx * dx + dy * dy <= 1;
-    }, 700, foliageBox);
-    return { trunkPts, foliagePts, cx, cy };
-  }
-
-  function buildCake(cx, cy) {
-    const body = { x: cx - 150, y: cy - 60, w: 300, h: 120 };
-    const bodyPts = stipple((x, y) => x >= body.x && x <= body.x + body.w && y >= body.y && y <= body.y + body.h, 900, body);
-    const candle = { x: cx - 6, y: cy - 130, w: 12, h: 60 };
-    const candlePts = stipple((x, y) => x >= candle.x && x <= candle.x + candle.w && y >= candle.y && y <= candle.y + candle.h, 40, candle);
-    return { bodyPts, candlePts, cx, cy, body };
+  function layoutSample(sample, cx, cy) {
+    const h = ch * 0.5, w = h * sample.aspect;
+    const x0 = cx - w / 2, y0 = cy + ch * 0.16 - h;
+    return { pts: sample.points.map((p) => ({ x: x0 + p.rx * w, y: y0 + p.ry * h, rx: p.rx, ry: p.ry, color: p.color })), cx };
   }
 
   function draw() {
     if (!ctx2d) { requestAnimationFrame(draw); return; }
     ctx2d.clearRect(0, 0, cw, ch);
     const cx = cw / 2, cy = ch / 2 + 40;
-    const dotColor = getComputedStyle(document.body).getPropertyValue('--dot').trim() || '#111';
-    ctx2d.fillStyle = dotColor;
 
     shakeEnergy *= 0.9;
 
     if (hostShape === 'tree') {
-      if (!treePts || treePts.cx !== cx) treePts = buildTree(cx, cy);
-      const wobble = Math.sin(Date.now() / 60) * shakeEnergy * 18;
-      treePts.trunkPts.forEach(([x, y]) => ctx2d.fillRect(x, y, 2.4, 2.4));
-      treePts.foliagePts.forEach(([x, y]) => {
-        const lift = (cy - 90 - y) / 110; // 0 at base, ~1 at top
-        ctx2d.fillRect(x + wobble * lift, y, 2.4, 2.4);
-      });
-    } else {
-      if (!cakePts || cakePts.cx !== cx) cakePts = buildCake(cx, cy);
-      let split = 0;
-      if (cutAnim) {
-        cutAnim.t += 0.04;
-        split = Math.min(1, cutAnim.t) * 60;
-        if (cutAnim.t >= 1.6) cutAnim = null;
+      if (plantSample && (!treePts || treePts.cx !== cx)) treePts = layoutSample(plantSample, cx, cy);
+      if (treePts) {
+        const wobble = Math.sin(Date.now() / 60) * shakeEnergy * 18;
+        treePts.pts.forEach((p) => {
+          const lift = 1 - p.ry; // more sway near the top, still near the base
+          ctx2d.fillStyle = p.color;
+          ctx2d.beginPath();
+          ctx2d.arc(p.x + wobble * lift, p.y, 2, 0, Math.PI * 2);
+          ctx2d.fill();
+        });
       }
-      cakePts.candlePts.forEach(([x, y]) => ctx2d.fillRect(x, y, 2.4, 2.4));
-      cakePts.bodyPts.forEach(([x, y]) => {
-        const side = x < cakePts.cx ? -1 : 1;
-        const offset = split ? side * split : 0;
-        ctx2d.fillRect(x + offset, y, 2.4, 2.4);
-      });
-      if (split > 4) {
-        ctx2d.strokeStyle = dotColor;
-        ctx2d.lineWidth = 2;
-        ctx2d.beginPath();
-        ctx2d.moveTo(cakePts.cx, cakePts.body.y - 10);
-        ctx2d.lineTo(cakePts.cx, cakePts.body.y + cakePts.body.h + 10);
-        ctx2d.stroke();
+    } else {
+      if (cakeSample && (!cakePts || cakePts.cx !== cx)) cakePts = layoutSample(cakeSample, cx, cy);
+      if (cakePts) {
+        let split = 0;
+        if (cutAnim) {
+          cutAnim.t += 0.04;
+          split = Math.min(1, cutAnim.t) * 60;
+          if (cutAnim.t >= 1.6) cutAnim = null;
+        }
+        cakePts.pts.forEach((p) => {
+          const side = p.rx < 0.5 ? -1 : 1;
+          const offset = split ? side * split : 0;
+          ctx2d.fillStyle = p.color;
+          ctx2d.beginPath();
+          ctx2d.arc(p.x + offset, p.y, 2, 0, Math.PI * 2);
+          ctx2d.fill();
+        });
+        if (split > 4) {
+          const lineColor = getComputedStyle(document.body).getPropertyValue('--dot').trim() || '#111';
+          ctx2d.strokeStyle = lineColor;
+          ctx2d.lineWidth = 2;
+          ctx2d.beginPath();
+          ctx2d.moveTo(cx, cy - ch * 0.3);
+          ctx2d.lineTo(cx, cy + 10);
+          ctx2d.stroke();
+        }
       }
     }
     requestAnimationFrame(draw);

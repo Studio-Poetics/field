@@ -60,7 +60,7 @@
   }
 
   .ic { width: 1.1em; height: 1.1em; stroke: currentColor; fill: none;
-        stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round;
+        stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round;
         vertical-align: -0.16em; flex: none; }
 
   .menu { position: fixed; top: 18px; right: 22px; z-index: 60; }
@@ -159,7 +159,6 @@
   .flow .box small { display: block; color: var(--faint); text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.62rem; margin-bottom: 4px; }
   .flow .box b { color: var(--ink); font-weight: 620; }
   .flow .arrow { align-self: center; color: var(--accent); flex: none; }
-  .glyph { width: 32px; height: 32px; }
 
   .concepts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 22px; }
   .concept { background: var(--card); border: 2px solid var(--line); border-top: 3px solid var(--accent); border-radius: 0; padding: 16px 18px; }
@@ -278,9 +277,9 @@
       <p class="lead r">No install step, no build, no code review, nothing to compile. A plugin is a single file that ends in <code>.field-plugin.json</code> — plain text you could write in Notes.</p>
       <div class="flow r">
         <div class="box"><small>You write</small><b>one .json file</b></div>
-        <div class="arrow"><canvas class="glyph" data-shape="arrow" width="32" height="32"></canvas></div>
+        <div class="arrow"><svg class="ic" style="width:32px;height:32px;"><use href="#i-arrowR"/></svg></div>
         <div class="box"><small>FIELD reads</small><b>Plugin Gallery</b></div>
-        <div class="arrow"><canvas class="glyph" data-shape="arrow" width="32" height="32"></canvas></div>
+        <div class="arrow"><svg class="ic" style="width:32px;height:32px;"><use href="#i-arrowR"/></svg></div>
         <div class="box"><small>Role gets</small><b>a new option</b></div>
       </div>
       <p class="r">Inside the file you describe three things: which role the chip belongs to (TOUCH, LIGHT, SOUND…), how to wire it (which pin goes where), and a few short fragments of Arduino code that read the chip and hand FIELD a number from 0 to 1.</p>
@@ -412,7 +411,7 @@
         <li><span class="act">Under Add Plugin, choose <strong>Paste JSON</strong> and paste your file in — or just drag the <code>.field-plugin.json</code> file anywhere onto the window.</span><span class="see"><b>See</b> the text land in the box, or a drop message while dragging.</span></li>
         <li><span class="act">Click <strong>Install Plugin</strong>.</span><span class="see"><b>See</b> a green line: "installed — 1 component added."</span></li>
         <li><span class="act">Add an Actor, give it a LIGHT input (or whichever role your plugin targets), and open its hardware dropdown.</span><span class="see"><b>See</b> your plugin's name in the list, wiring text and all.</span></li>
-        <li><span class="act">Wire the real chip to a board, upload with one‑click upload, and watch the Actor panel.</span><span class="see"><b>See</b> a live 0‑to‑1 number move when you cover or uncover the sensor.</span></li>
+        <li><span class="act">Wire the real chip to a board, upload with one‑click upload, and watch the Actor panel.</span><span class="see"><b>See</b> a live number move as you cover or uncover the sensor.</span></li>
       </ol>
       <div class="note fix r"><span class="lbl"><svg class="ic"><use href="#i-info"/></svg> If the number never moves</span>
         <ul>
@@ -540,55 +539,6 @@
   } else {
     reveal(folds[0]); folds[0].classList.add('active'); jumps[0].classList.add('active');
     backBtn.disabled = true; track.style.width = (1 / total * 100) + '%';
-  }
-})();
-</script>
-<script>
-(function () {
-  function stipple(pathFn, count, box) {
-    var pts = [], tries = 0;
-    while (pts.length < count && tries < count * 30) {
-      tries++;
-      var x = box.x + Math.random() * box.w, y = box.y + Math.random() * box.h;
-      if (pathFn(x, y)) pts.push([x, y]);
-    }
-    return pts;
-  }
-  function sign(x1, y1, x2, y2, x3, y3) { return (x1 - x3) * (y2 - y3) - (x2 - x3) * (y1 - y3); }
-  var SHAPES = {
-    arrow: function (w, h) {
-      var pts = [];
-      var shaft = { x: w * 0.1, y: h * 0.42, w: w * 0.5, h: h * 0.16 };
-      pts = pts.concat(stipple(function (x, y) { return x >= shaft.x && x <= shaft.x + shaft.w && y >= shaft.y && y <= shaft.y + shaft.h; }, 40, shaft));
-      var ax = w * 0.55, ay = h * 0.18, bx = w * 0.55, by = h * 0.82, cx = w * 0.92, cy = h * 0.5;
-      var head = { x: w * 0.55, y: h * 0.18, w: w * 0.36, h: h * 0.64 };
-      pts = pts.concat(stipple(function (x, y) {
-        var d1 = sign(x, y, ax, ay, bx, by), d2 = sign(x, y, bx, by, cx, cy), d3 = sign(x, y, cx, cy, ax, ay);
-        var hasNeg = (d1 < 0) || (d2 < 0) || (d3 < 0), hasPos = (d1 > 0) || (d2 > 0) || (d3 > 0);
-        return !(hasNeg && hasPos);
-      }, 32, head));
-      return pts;
-    }
-  };
-  var glyphs = document.querySelectorAll('canvas.glyph');
-  for (var i = 0; i < glyphs.length; i++) {
-    var cv = glyphs[i];
-    var dpr = window.devicePixelRatio || 1;
-    var w = cv.width, h = cv.height;
-    cv.width = w * dpr; cv.height = h * dpr;
-    cv.style.width = w + 'px'; cv.style.height = h + 'px';
-    var ctx = cv.getContext('2d');
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    var fn = SHAPES[cv.getAttribute('data-shape')];
-    if (!fn) continue;
-    var pts = fn(w, h);
-    var color = getComputedStyle(document.body).getPropertyValue('--ink') || '#111';
-    ctx.fillStyle = color.trim() || '#111';
-    for (var j = 0; j < pts.length; j++) {
-      ctx.beginPath();
-      ctx.arc(pts[j][0], pts[j][1], 1.05, 0, Math.PI * 2);
-      ctx.fill();
-    }
   }
 })();
 </script>

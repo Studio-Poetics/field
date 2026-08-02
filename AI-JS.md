@@ -26,21 +26,25 @@ WebSocket yourself — you include one small library, `field-bridge.js`, and cal
 
 ## 2. Include the library
 
-`field-bridge.js` ships next to this file. Load it before your sketch. The library
-infers the FIELD WebSocket URL from its own `src`, so **point the `src` at the
-running FIELD app** (the desktop app serves it on `localhost` — default port 5173
-in dev, or whatever the app prints).
+`field-bridge.js` ships next to this file. Load it before your sketch — that's it,
+no configuration needed:
 
 ```html
-<!-- Load from the running FIELD app so the WS URL is inferred automatically -->
-<script src="http://localhost:5173/field-bridge.js"></script>
+<script src="./field-bridge.js"></script>
 ```
 
-If you host the page elsewhere and only have a copy of the library, set the URL
-explicitly **before** the script tag:
+You don't need to know FIELD's port or type any address. The FIELD desktop app
+doesn't always run on the same port (it picks the first free one starting at
+5173), so `field-bridge.js` auto-discovers the running server: it first tries
+the address it was loaded from, then scans local ports until one answers. This
+also means you can save the finished HTML file and reopen it later, or send it
+to someone else on the same machine — it still connects with zero setup.
+
+Only set the URL yourself if you're pointing at FIELD on a *different* machine
+(e.g. a phone-only test rig on the LAN) — do this **before** the script tag:
 
 ```html
-<script>window.FIELD_WS_URL = 'ws://localhost:5173/ws';</script>
+<script>window.FIELD_WS_URL = 'ws://192.168.1.42:5173/ws';</script>
 <script src="./field-bridge.js"></script>
 ```
 
@@ -93,7 +97,7 @@ just poll the getters each frame.
 <head><meta charset="utf-8" /></head>
 <body>
 <script src="https://cdn.jsdelivr.net/npm/p5@1.9.4/lib/p5.min.js"></script>
-<script src="http://localhost:5173/field-bridge.js"></script>
+<script src="./field-bridge.js"></script>
 <script>
 function setup() {
   createCanvas(windowWidth, windowHeight);
@@ -149,7 +153,7 @@ Use `field.on()` to push values into the DOM, or poll with
 </head>
 <body>
 <div id="ball"></div>
-<script src="http://localhost:5173/field-bridge.js"></script>
+<script src="./field-bridge.js"></script>
 <script>
   const ball = document.getElementById('ball');
 

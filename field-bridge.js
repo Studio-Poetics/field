@@ -21,22 +21,58 @@
  *   field.connected                       // true when WS is open
  *
  * The host is inferred from the script's own src URL so the library works
- * when loaded from FIELD's dev server without any configuration.
+ * when loaded from FIELD's dev server without any configuration. If that
+ * doesn't resolve to a live server (script copied locally, page opened via
+ * file://, desktop app bound to a non-default port), it automatically scans
+ * a short range of localhost ports so exported/downloaded sketches still
+ * connect with zero setup — no port number to find or type.
  * Override: set window.FIELD_WS_URL before loading this script.
  */
 (function () {
-  // ── Determine WS URL ──────────────────────────────────────────────────────────
-  var wsUrl = (typeof window !== 'undefined' && window.FIELD_WS_URL) || null;
-  if (!wsUrl) {
+  // ── Build the list of WS URLs to try, in order ──────────────────────────────────
+  // The desktop app's port isn't fixed (it picks the first free port from 5173
+  // up), so a single inferred URL isn't reliable enough on its own — scanning a
+  // small local range is what makes a saved/emailed HTML file "just work".
+  var PORT_SCAN_RANGE = 10; // 5173..5182 — covers a handful of other apps/instances already on 5173+
+  function buildCandidates() {
+    if (typeof window !== 'undefined' && window.FIELD_WS_URL) return [window.FIELD_WS_URL];
+
+    var candidates = [];
+    var seen = {};
+    function add(url) {
+      if (!seen[url]) { seen[url] = true; candidates.push(url); }
+    }
+
+    // Fast path: script loaded directly from a running FIELD server.
     var scriptSrc = '';
     try { scriptSrc = document.currentScript.src; } catch (_) {}
-    var wsHost = (typeof location !== 'undefined') ? location.host : 'localhost:5173';
     if (scriptSrc) {
-      try { wsHost = new URL(scriptSrc).host; } catch (_) {}
+      try {
+        var su = new URL(scriptSrc);
+        if (su.protocol !== 'file:' && su.host) {
+          add((su.protocol === 'https:' ? 'wss' : 'ws') + '://' + su.host + '/ws');
+        }
+      } catch (_) {}
     }
-    var wsProtocol = (typeof location !== 'undefined' && location.protocol === 'https:') ? 'wss' : 'ws';
-    wsUrl = wsProtocol + '://' + wsHost + '/ws';
+
+    // Page itself served by FIELD (or any http(s) host on the same origin).
+    if (typeof location !== 'undefined' && location.protocol !== 'file:' && location.host) {
+      add((location.protocol === 'https:' ? 'wss' : 'ws') + '://' + location.host + '/ws');
+    }
+
+    // Fallback: scan default local ports. wss first — the desktop app serves
+    // HTTPS; a self-signed cert must be trusted once per port in-browser
+    // before this succeeds, but it still needs no manual URL/port entry.
+    for (var p = 5173; p < 5173 + PORT_SCAN_RANGE; p++) {
+      add('wss://localhost:' + p + '/ws');
+      add('ws://localhost:' + p + '/ws');
+    }
+
+    return candidates;
   }
+
+  var candidates = buildCandidates();
+  var wsUrl = candidates[0];
 
   // ── Internal state ────────────────────────────────────────────────────────────
   var state = {
@@ -161,10 +197,32 @@
   };
 
   // ── WebSocket connection ──────────────────────────────────────────────────────
+  var candidateIndex = 0;
+  var locked = false;       // true once a candidate has actually connected
+  var scanTimer = null;
+  var CONNECT_TIMEOUT = 1200; // ms per candidate while scanning
+
   function connect() {
+    if (!locked && candidateIndex >= candidates.length) candidateIndex = 0; // wrap and retry
+    wsUrl = locked ? wsUrl : candidates[candidateIndex];
+
     var ws = new WebSocket(wsUrl);
+    var settled = false;
+
+    if (!locked) {
+      scanTimer = setTimeout(function () {
+        if (settled) return;
+        settled = true;
+        try { ws.close(); } catch (_) {}
+        candidateIndex++;
+        connect();
+      }, CONNECT_TIMEOUT);
+    }
 
     ws.addEventListener('open', function () {
+      settled = true;
+      clearTimeout(scanTimer);
+      locked = true;
       connected = true;
       ws.send(JSON.stringify({
         type: 'handshake',
@@ -218,6 +276,19 @@
 
     ws.addEventListener('close', function () {
       connected = false;
+      if (!locked) {
+        // Failed fast (e.g. connection refused) — no need to wait out the full
+        // per-candidate timeout before trying the next port.
+        if (settled) return;
+        settled = true;
+        clearTimeout(scanTimer);
+        candidateIndex++;
+        connect();
+        return;
+      }
+      // Was working, server went away (restart, network blip) — keep retrying
+      // the same address; if it never comes back the user reloads the page,
+      // which restarts discovery from scratch (server may now be on a new port).
       setTimeout(connect, 2000);
     });
 

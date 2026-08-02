@@ -59,7 +59,7 @@
   }
 
   .ic { width: 1.1em; height: 1.1em; stroke: currentColor; fill: none;
-        stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round;
+        stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round;
         vertical-align: -0.16em; flex: none; }
 
   /* ── top-right chapter menu (drops down on hover / focus / tap) ── */
@@ -157,6 +157,28 @@
   .note.fix ul { margin: 4px 0 0; color: var(--ink); }
   .note.fix li { margin: 4px 0; }
 
+  /* ── advanced trivia disclosure (opt-in technical detail) ── */
+  .adv { margin: 16px 0; }
+  .adv-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--accent2); background: var(--accent2-soft); border: 2px solid var(--accent2);
+    border-radius: 999px; padding: 7px 14px 7px 12px; cursor: pointer;
+  }
+  .adv-btn .ic { width: 14px; height: 14px; }
+  .adv-btn .ic.close { display: none; }
+  .adv.open .adv-btn .ic.open { display: none; }
+  .adv.open .adv-btn .ic.close { display: inline; }
+  .adv-body {
+    display: none; margin-top: 10px; padding: 14px 17px;
+    background: var(--card); border: 2px dashed var(--accent2); border-radius: 0;
+    font-size: 0.92rem; color: var(--ink);
+  }
+  .adv-body p { color: var(--ink); margin: 0 0 8px; }
+  .adv-body p:last-child { margin-bottom: 0; }
+  .adv-body pre { margin: 8px 0 0; }
+  .adv.open .adv-body { display: block; }
+
   .flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 8px; margin: 24px 0; font-family: var(--mono); font-size: 0.78rem; }
   .flow .box { background: var(--card); border: 2px solid var(--line); border-radius: 0; padding: 13px 15px; flex: 1 1 130px; text-align: center; }
   .flow .box small { display: block; color: var(--faint); text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.62rem; margin-bottom: 4px; }
@@ -168,7 +190,8 @@
   .concept:nth-of-type(2n) { border-top-color: var(--accent2); }
   .concept:nth-of-type(2n) .word { color: var(--accent2); }
   .concept .word { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-ink); }
-  .glyph { width: 40px; height: 40px; flex-shrink: 0; }
+  .glyph-photo { width: 40px; height: 40px; flex-shrink: 0; object-fit: contain; filter: grayscale(100%) contrast(1.15); }
+  .glyph-icon { width: 40px; height: 40px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 1.4; }
   .concept h3 { margin: 6px 0 5px; font-size: 1.1rem; }
   .concept p { margin: 0; font-size: 0.92rem; }
 
@@ -264,6 +287,10 @@
   <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
   <symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></symbol>
   <symbol id="i-hand" viewBox="0 0 24 24"><path d="M18 11V6a2 2 0 0 0-4 0v5M14 10V4a2 2 0 0 0-4 0v6M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></symbol>
+  <symbol id="i-tune" viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="9" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="11" cy="18" r="2"/></symbol>
 </defs></svg>
 
 <!-- ── CHAPTER MENU (drops from top-right) ── -->
@@ -360,15 +387,20 @@
     <div class="inner">
       <span class="tag r"><svg class="ic"><use href="#i-shapes"/></svg> Four words</span>
       <h1 class="r">Learn four words. Then you can describe almost anything.</h1>
-      <p class="r">FIELD borrows its words from the theatre. A play is also things reacting to each other on a stage. Read each word before you use it.</p>
+      <p class="r">These four words are a way of thinking, not just labels. Whenever you plan something, ask them in order: who acts, what job do they play, when should they act, and in what manner.</p>
       <div class="concepts r">
-        <div class="concept"><span class="word"><canvas class="glyph" data-shape="square" width="40" height="40"></canvas> Actor</span><h3>A thing in your world</h3><p>A plant, a door, your phone. An Actor can sense, and it can react.</p></div>
-        <div class="concept"><span class="word"><canvas class="glyph" data-shape="circle" width="40" height="40"></canvas> Role</span><h3>One sense or one reaction</h3><p>An input role is a sense: <em>tilt, touch, sound.</em> An output role is a reaction: <em>show, move, glow, speak.</em></p></div>
-        <div class="concept"><span class="word"><canvas class="glyph" data-shape="arrow" width="40" height="40"></canvas> Cue</span><h3>The line you draw</h3><p>A Cue joins one Actor's sense to another Actor's reaction. "When the phone tilts, move the circle."</p></div>
-        <div class="concept"><span class="word"><canvas class="glyph" data-shape="triangle" width="40" height="40"></canvas> Mechanism</span><h3>The rule inside the line</h3><p>You pick one rule. A <em>switch</em> is on or off. A <em>dial</em> follows smoothly. A <em>latch</em> stays on.</p></div>
+        <div class="concept"><span class="word"><img class="glyph-photo" src="Plant.png" alt="A plant, used as an example Actor"> Actor</span><h3>Who acts</h3><p>An Actor is anything in your physical surroundings that acts or performs an action. For example: a plant, a door, or your phone. Start every idea by naming your Actors.</p></div>
+        <div class="concept"><span class="word"><svg class="glyph-icon"><use href="#i-target"/></svg> Role</span><h3>What job they play</h3><p>A Role is the job an Actor plays. An Actor can sense the world — that's an Input Role, like touch or tilt. Or it can respond to the world — that's an Output Role, like glow or speak.</p></div>
+        <div class="concept"><span class="word"><svg class="glyph-icon"><use href="#i-arrowR"/></svg> Cue</span><h3>When and how they act</h3><p>A Cue is the rule for when and how two Actors act together. It is the line you draw between them. For example: "When the phone tilts, move the circle."</p></div>
+        <div class="concept"><span class="word"><svg class="glyph-icon"><use href="#i-tune"/></svg> Mechanism</span><h3>The manner of the act</h3><p>A Mechanism is the exact way the action plays out. Once a Cue is set, FIELD offers you a few Mechanisms to choose from — snap instantly, follow smoothly, stay put once triggered, and more. You just pick one.</p></div>
       </div>
-      <div class="note why r"><span class="lbl"><svg class="ic"><use href="#i-info"/></svg> One number to remember</span>
-        <p>Every value in FIELD is between <strong>0 and 1</strong>. Quiet is 0. Loud is 1. Phone flat-left is 0. Phone upright is 0.5. Phone flat-right is 1. Every sensor and every reaction use this same 0-to-1 language.</p></div>
+      <div class="adv r">
+        <button type="button" class="adv-btn"><svg class="ic open"><use href="#i-plus"/></svg><svg class="ic close"><use href="#i-minus"/></svg> Advanced trivia</button>
+        <div class="adv-body">
+          <p>Under the hood, every sense and every reaction is a number between 0 and 1 — quiet is 0, loud is 1; phone flat-left is 0, upright is 0.5, flat-right is 1. You never have to think in these numbers. FIELD converts what you build into them automatically.</p>
+          <p>The four Mechanisms you'll meet as you build are named <b>Switch</b> (snap on/off), <b>Dial</b> (follow smoothly), <b>Latch</b> (stay on once triggered), and a few others for timing and counting.</p>
+        </div>
+      </div>
       <div class="note diary r"><span class="lbl"><svg class="ic"><use href="#i-pencil"/></svg> Diary — use the four words</span>
         <p>Take idea 1 from your notebook. Write it again with the words: <em>Actor:</em> ______ · <em>senses:</em> ______ · <em>reacts:</em> ______ · <em>Cue:</em> "When ______, then ______."</p></div>
     </div>
@@ -500,18 +532,23 @@
       <p class="lead r">Your sketch does not change. Only the source of the number changes.</p>
       <p class="r">A <strong>microcontroller</strong> is a tiny computer on a board. You will use an <strong>Arduino</strong> or an <strong>ESP32</strong> board. You will wire a <strong>potentiometer</strong> to it. A potentiometer is a knob you turn. You turn the knob, and the circle moves — the same as tilting did.</p>
       <div class="note why r"><span class="lbl"><svg class="ic"><use href="#i-info"/></svg> Why the sketch stays the same</span>
-        <p>The knob sends a number from 0 to 1. The phone sent a number from 0 to 1. Your sketch asks for a 0-to-1 number. It does not care where the number comes from. That is the whole trick.</p></div>
+        <p>The knob and the phone both feed the same TILT role. Your sketch just asks FIELD for that role's value — it does not care where the value comes from. That is the whole trick.</p></div>
       <ol class="steps r">
         <li><span class="act">Wire the knob's middle pin to pin <strong>A0</strong> on the board. Wire the outer pins to power and ground.</span><span class="see"><b>See</b> the knob connected to the board.</span></li>
         <li><span class="act">In FIELD, open the Phone Actor's TILT role. Set its <strong>pin</strong> to A0.</span><span class="see"><b>See</b> that TILT now reads from real hardware.</span></li>
         <li><span class="act">Open the <strong>Get Code</strong> panel. FIELD writes the full program for the board.</span><span class="see"><b>See</b> the generated code. You write none of it.</span></li>
       </ol>
-      <p class="r">Here is a peek at what the board sends to FIELD. It sends one short line at a time:</p>
-<pre class="r"><code><span class="c">// board → FIELD, as you turn the knob</span>
+      <div class="adv r">
+        <button type="button" class="adv-btn"><svg class="ic open"><use href="#i-plus"/></svg><svg class="ic close"><use href="#i-minus"/></svg> Advanced trivia</button>
+        <div class="adv-body">
+          <p>The board talks to FIELD over the wire in small text messages, one per line, as the knob turns:</p>
+<pre><code><span class="c">// board → FIELD, as you turn the knob</span>
 {"role":"TILT","value":0.000}   <span class="c">// knob fully down</span>
 {"role":"TILT","value":0.512}   <span class="c">// halfway</span>
 {"role":"TILT","value":1.000}   <span class="c">// fully up</span></code></pre>
-      <p class="r">This is the same 0-to-1 language again. Now upload the code to the board.</p>
+        </div>
+      </div>
+      <p class="r">Now upload the code to the board.</p>
       <ol class="steps r">
         <li><span class="act">Plug the board into your computer with a USB cable.</span><span class="see"><b>See</b> the board's power light turn on.</span></li>
         <li><span class="act">Open the <strong>Upload to board</strong> card in FIELD. Click <em>Set up one-click upload</em> once.</span><span class="see"><b>See</b> FIELD get ready. This step downloads a tool the first time.</span></li>
@@ -524,7 +561,7 @@
           <li>Check the USB cable. Some cables only carry power, not data.</li>
           <li>Pick the correct port. Unplug and replug to see which one appears.</li>
         </ul></div>
-      <p class="r"><span class="uName">You</span> drove the same sketch from two worlds: your phone, and a chip you programmed. Remember the model: <strong>the sensor sends 0 to 1, and the sketch reacts.</strong></p>
+      <p class="r"><span class="uName">You</span> drove the same sketch from two worlds: your phone, and a chip you programmed. Same Actor, same Role, same Cue — only where the signal comes from changed.</p>
       <div class="note diary r"><span class="lbl"><svg class="ic"><use href="#i-pencil"/></svg> Diary — name the boundary</span><p>Write what stayed the same and what changed, from phone to hardware. Say it in your own words. Then it sticks.</p></div>
     </div>
   </section>
@@ -672,6 +709,11 @@
     if (e.altKey && e.key === 'ArrowUp') { e.preventDefault(); go(current - 1); }
   });
 
+  /* ── advanced trivia toggles ── */
+  document.querySelectorAll('.adv-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () { btn.closest('.adv').classList.toggle('open'); });
+  });
+
   /* ── resume ── */
   var saved = parseInt(localStorage.getItem(KEY), 10);
   if (id.name && !isNaN(saved) && saved > 0 && saved < total) {
@@ -679,74 +721,6 @@
   } else {
     reveal(folds[0]); folds[0].classList.add('active'); jumps[0].classList.add('active');
     backBtn.disabled = true; track.style.width = (1 / total * 100) + '%';
-  }
-})();
-</script>
-<script>
-(function () {
-  function stipple(pathFn, count, box) {
-    var pts = [], tries = 0;
-    while (pts.length < count && tries < count * 30) {
-      tries++;
-      var x = box.x + Math.random() * box.w, y = box.y + Math.random() * box.h;
-      if (pathFn(x, y)) pts.push([x, y]);
-    }
-    return pts;
-  }
-  var SHAPES = {
-    square: function (w, h) {
-      var box = { x: w * 0.18, y: h * 0.18, w: w * 0.64, h: h * 0.64 };
-      return stipple(function (x, y) { return x >= box.x && x <= box.x + box.w && y >= box.y && y <= box.y + box.h; }, 90, box);
-    },
-    circle: function (w, h) {
-      var cx = w / 2, cy = h / 2, r = w * 0.38;
-      var box = { x: cx - r, y: cy - r, w: r * 2, h: r * 2 };
-      return stipple(function (x, y) { var dx = (x - cx) / r, dy = (y - cy) / r; return dx * dx + dy * dy <= 1; }, 90, box);
-    },
-    triangle: function (w, h) {
-      var box = { x: w * 0.08, y: h * 0.14, w: w * 0.84, h: h * 0.74 };
-      var ax = w / 2, ay = h * 0.12, bx = w * 0.9, by = h * 0.88, cx = w * 0.1, cy = h * 0.88;
-      function sign(x1, y1, x2, y2, x3, y3) { return (x1 - x3) * (y2 - y3) - (x2 - x3) * (y1 - y3); }
-      return stipple(function (x, y) {
-        var d1 = sign(x, y, ax, ay, bx, by), d2 = sign(x, y, bx, by, cx, cy), d3 = sign(x, y, cx, cy, ax, ay);
-        var hasNeg = (d1 < 0) || (d2 < 0) || (d3 < 0), hasPos = (d1 > 0) || (d2 > 0) || (d3 > 0);
-        return !(hasNeg && hasPos);
-      }, 90, box);
-    },
-    arrow: function (w, h) {
-      var pts = [];
-      var shaft = { x: w * 0.1, y: h * 0.42, w: w * 0.5, h: h * 0.16 };
-      pts = pts.concat(stipple(function (x, y) { return x >= shaft.x && x <= shaft.x + shaft.w && y >= shaft.y && y <= shaft.y + shaft.h; }, 55, shaft));
-      var head = { x: w * 0.55, y: h * 0.18, w: w * 0.36, h: h * 0.64 };
-      var ax = w * 0.55, ay = h * 0.18, bx = w * 0.55, by = h * 0.82, cx = w * 0.92, cy = h * 0.5;
-      function sign(x1, y1, x2, y2, x3, y3) { return (x1 - x3) * (y2 - y3) - (x2 - x3) * (y1 - y3); }
-      pts = pts.concat(stipple(function (x, y) {
-        var d1 = sign(x, y, ax, ay, bx, by), d2 = sign(x, y, bx, by, cx, cy), d3 = sign(x, y, cx, cy, ax, ay);
-        var hasNeg = (d1 < 0) || (d2 < 0) || (d3 < 0), hasPos = (d1 > 0) || (d2 > 0) || (d3 > 0);
-        return !(hasNeg && hasPos);
-      }, 45, head));
-      return pts;
-    }
-  };
-  var glyphs = document.querySelectorAll('canvas.glyph');
-  for (var i = 0; i < glyphs.length; i++) {
-    var cv = glyphs[i];
-    var dpr = window.devicePixelRatio || 1;
-    var w = cv.width, h = cv.height;
-    cv.width = w * dpr; cv.height = h * dpr;
-    cv.style.width = w + 'px'; cv.style.height = h + 'px';
-    var ctx = cv.getContext('2d');
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    var fn = SHAPES[cv.getAttribute('data-shape')];
-    if (!fn) continue;
-    var pts = fn(w, h);
-    var color = getComputedStyle(document.body).getPropertyValue('--ink') || '#111';
-    ctx.fillStyle = color.trim() || '#111';
-    for (var j = 0; j < pts.length; j++) {
-      ctx.beginPath();
-      ctx.arc(pts[j][0], pts[j][1], 1.15, 0, Math.PI * 2);
-      ctx.fill();
-    }
   }
 })();
 </script>

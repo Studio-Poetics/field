@@ -59,7 +59,7 @@
   }
 
   .ic { width: 1.1em; height: 1.1em; stroke: currentColor; fill: none;
-        stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round;
+        stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round;
         vertical-align: -0.16em; flex: none; }
 
   .menu { position: fixed; top: 18px; right: 22px; z-index: 60; }
@@ -153,6 +153,28 @@
   .note.fix ul { margin: 4px 0 0; color: var(--ink); }
   .note.fix li { margin: 4px 0; }
 
+  /* ── advanced trivia disclosure (opt-in technical detail) ── */
+  .adv { margin: 16px 0; }
+  .adv-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--accent2); background: var(--accent2-soft); border: 2px solid var(--accent2);
+    border-radius: 999px; padding: 7px 14px 7px 12px; cursor: pointer;
+  }
+  .adv-btn .ic { width: 14px; height: 14px; }
+  .adv-btn .ic.close { display: none; }
+  .adv.open .adv-btn .ic.open { display: none; }
+  .adv.open .adv-btn .ic.close { display: inline; }
+  .adv-body {
+    display: none; margin-top: 10px; padding: 14px 17px;
+    background: var(--card); border: 2px dashed var(--accent2); border-radius: 0;
+    font-size: 0.92rem; color: var(--ink);
+  }
+  .adv-body p { color: var(--ink); margin: 0 0 8px; }
+  .adv-body p:last-child { margin-bottom: 0; }
+  .adv-body pre { margin: 8px 0 0; }
+  .adv.open .adv-body { display: block; }
+
   .flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 8px; margin: 24px 0; font-family: var(--mono); font-size: 0.78rem; }
   .flow .box { background: var(--card); border: 2px solid var(--line); border-radius: 0; padding: 13px 15px; flex: 1 1 130px; text-align: center; }
   .flow .box:nth-child(3) { border-color: var(--accent2); }
@@ -243,6 +265,8 @@
   <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
   <symbol id="i-wind" viewBox="0 0 24 24"><path d="M12.8 19.6A2 2 0 1 0 14 16H2"/><path d="M17.5 8a2.5 2.5 0 1 1 2 4H2"/><path d="M9.8 4.4A2 2 0 1 1 11 8H2"/></symbol>
   <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5.76.76 1.23 1.52 1.41 2.5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/></symbol>
 </defs></svg>
 
 <!-- ── CHAPTER MENU ── -->
@@ -285,7 +309,7 @@
       <span class="tag r"><svg class="ic"><use href="#i-link"/></svg> Scenario 1</span>
       <h1 class="r">Two phones, talking directly.</h1>
       <p class="lead r">You and a friend each hold a phone. Tilt yours, and something changes on theirs — with no laptop in the room after you set it up.</p>
-      <p class="r">FIELD calls this <strong>Phone Export</strong>. Behind the name is a connection type called <strong>WebRTC</strong> — the two phones send data straight to each other, phone to phone (this direct kind of link is called <strong>P2P</strong>, short for peer‑to‑peer).</p>
+      <p class="r">FIELD calls this <strong>Phone Export</strong>. The two phones send data straight to each other, phone to phone, once they've paired.</p>
       <ol class="steps r">
         <li><span class="act">On your computer, add two Actors — one for each phone — with the senses and reactions you want. Draw the Cues between them like normal.</span><span class="see"><b>See</b> two Actors joined by a Cue, same as any project.</span></li>
         <li><span class="act">Open the <strong>Connect</strong> menu and choose <strong>Phone Export</strong>. Pick which Actor is Phone A and which is Phone B.</span><span class="see"><b>See</b> the export panel with two dropdowns.</span></li>
@@ -295,13 +319,19 @@
         <li><span class="act">Type that same code into the second phone.</span><span class="see"><b>See</b> both phones report "connected".</span></li>
       </ol>
       <div class="note why r"><span class="lbl"><svg class="ic"><use href="#i-info"/></svg> What the laptop is actually for</span>
-        <p>Both phones need the FIELD server (your computer) only for a few seconds, to trade the room code — this is called <strong>signaling</strong>. After that handshake, sensor data flows phone‑to‑phone directly. You can close the laptop.</p></div>
+        <p>Both phones need the FIELD server (your computer) only for a few seconds, to trade the room code. After that, sensor data flows phone‑to‑phone directly. You can close the laptop.</p></div>
       <div class="note fix r"><span class="lbl"><svg class="ic"><use href="#i-info"/></svg> Good to know</span>
         <ul>
           <li>Works for TILT, SHAKE, TOUCH, SOUND, BUTTON, SLIDER, TOGGLE. Other sense types are skipped and the panel tells you which.</li>
           <li>A CHORUS Cue (many senses feeding one reaction) is not supported in this export — swap it for a simpler mechanism first.</li>
           <li>Both phones must share Wi‑Fi with the FIELD server during pairing only — not while playing.</li>
         </ul></div>
+      <div class="adv r">
+        <button type="button" class="adv-btn"><svg class="ic open"><use href="#i-plus"/></svg><svg class="ic close"><use href="#i-minus"/></svg> Advanced trivia</button>
+        <div class="adv-body">
+          <p>The connection type behind Phone Export is called <b>WebRTC</b>. The brief handshake where the phones trade the room code through your computer is called <b>signaling</b>. Once that's done, the link is direct, phone to phone — this pattern is called <b>P2P</b> (peer‑to‑peer). None of these names matter for using FIELD; they're just what the underlying tech is called if you go looking.</p>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -328,7 +358,7 @@
           <li><span class="act">Paste Board 2's address into Board 1's Peer MAC field and upload again to Board 1. Paste Board 1's address into Board 2's Peer MAC field and upload again to Board 2 — each board needs the <em>other</em> one's address, so both boards get re‑flashed.</span><span class="see"><b>See</b> two fresh uploads, one per board.</span></li>
         </ol>
         <p>Now each board only accepts messages from the specific address you gave it, ignoring any other pair nearby.</p></div>
-      <p class="r">Turn a knob on Board 1, and whatever Board 2's output role controls — a light, a motor, a sound — reacts immediately. Same 0‑to‑1 language as everything else in FIELD, just carried over radio instead of a wire.</p>
+      <p class="r">Turn a knob on Board 1, and whatever Board 2's output role controls — a light, a motor, a sound — reacts immediately. It works exactly the same as everything else in FIELD, just carried over radio instead of a wire.</p>
     </div>
   </section>
 
@@ -340,9 +370,9 @@
       <p class="lead r">This is the way FIELD works most of the time. The laptop stays open and acts as the hub. Nothing needs pairing codes or MAC addresses — you just add both as Actors.</p>
       <div class="flow r">
         <div class="box"><small>Actor</small><b>Phone</b></div>
-        <div class="arrow"><canvas class="glyph" data-shape="arrow" width="32" height="32"></canvas></div>
+        <div class="arrow"><svg class="ic" style="width:32px;height:32px;"><use href="#i-arrowR"/></svg></div>
         <div class="box"><small>FIELD</small><b>your Cues</b></div>
-        <div class="arrow"><canvas class="glyph" data-shape="arrow" width="32" height="32"></canvas></div>
+        <div class="arrow"><svg class="ic" style="width:32px;height:32px;"><use href="#i-arrowR"/></svg></div>
         <div class="box"><small>Actor</small><b>Board</b></div>
       </div>
       <ol class="steps r">
@@ -372,7 +402,7 @@
         <li><strong>MQTT</strong> — bring in a value from anywhere on the internet, like another building or a public weather feed, as if it were a local sensor.</li>
         <li><strong>Bluetooth (BLE)</strong> — connect wireless sensor boards without a USB cable.</li>
       </ul>
-      <p class="r">Each of these shows up in the same <strong>Connect</strong> menu you used for the phone and the board. Once connected, its values behave exactly like any other Role — 0 to 1, ready for a Cue.</p>
+      <p class="r">Each of these shows up in the same <strong>Connect</strong> menu you used for the phone and the board. Once connected, it behaves exactly like any other Role, ready for a Cue.</p>
       <h2 class="r">New hardware, without new role types</h2>
       <p class="r">If you have a sensor chip FIELD does not know yet, a <strong>plugin</strong> teaches it — a single small file, no install step. A plugin never invents a new kind of sense; it only teaches an existing one (TOUCH, LIGHT, SOUND…) how to talk to one more chip. See <a href="plugins.html">Add a Custom Sensor</a> for a full walkthrough.</p>
       <h2 class="r">A real screen as an output</h2>
@@ -397,7 +427,7 @@
       </div>
       <ol class="steps r">
         <li><span class="act">Add all three Actors with the roles listed above. Connect Board over USB with one‑click upload; connect You with the sensor QR code.</span><span class="see"><b>See</b> three Actors on the canvas, all reporting live values.</span></li>
-        <li><span class="act">Cue 1: You.TILT → Screen.MOVE, mechanism <strong>DIAL</strong>.</span><span class="see"><b>See</b> tilt turn into a smooth 0‑to‑1 value on Screen.MOVE.</span></li>
+        <li><span class="act">Cue 1: You.TILT → Screen.MOVE, mechanism <strong>DIAL</strong>.</span><span class="see"><b>See</b> tilt turn smoothly into movement on Screen.MOVE.</span></li>
         <li><span class="act">Cue 2: Board.LIGHT → Screen.GLOW, mechanism <strong>DIAL</strong>.</span><span class="see"><b>See</b> the room's real light level feed a second value.</span></li>
         <li><span class="act">Add a Scene named <strong>Storm</strong>. Cue 3, live only in Storm: You.SHAKE → Board.GLOW, mechanism <strong>LATCH</strong>, set to trigger the Storm Scene.</span><span class="see"><b>See</b> a Scene selector appear with two Scenes.</span></li>
       </ol>
@@ -425,9 +455,9 @@
   }
 }</code></pre>
       <div class="note why r"><span class="lbl"><svg class="ic"><use href="#i-info"/></svg> Why this counts as "putting it together"</span>
-        <p>Two different device types (phone, board) drive the same sketch, through the same 0‑to‑1 language. A Scene turns a whole group of Cues on and off at once. And the sketch never asks where a number came from — it just asks for <code>field.get(...)</code>.</p></div>
+        <p>Two different device types (phone, board) drive the same sketch, through the same simple rules. A Scene turns a whole group of Cues on and off at once. And the sketch never asks where a number came from — it just asks for <code>field.get(...)</code>.</p></div>
       <div class="note diary r"><span class="lbl"><svg class="ic"><use href="#i-pencil"/></svg> Take it further</span>
-        <p>Swap Board.LIGHT for an MQTT subscription to a public weather feed. Cue 2 does not need to change — Screen.GLOW still just receives a 0‑to‑1 number, now from across the internet instead of across the room.</p></div>
+        <p>Swap Board.LIGHT for an MQTT subscription to a public weather feed. Cue 2 does not need to change — Screen.GLOW still just receives a number, now from across the internet instead of across the room.</p></div>
     </div>
   </section>
 
@@ -526,61 +556,16 @@
     if (e.altKey && e.key === 'ArrowUp') { e.preventDefault(); go(current - 1); }
   });
 
+  document.querySelectorAll('.adv-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () { btn.closest('.adv').classList.toggle('open'); });
+  });
+
   var saved = parseInt(localStorage.getItem(KEY), 10);
   if (!isNaN(saved) && saved > 0 && saved < total) {
     setTimeout(function () { go(saved); }, 450);
   } else {
     reveal(folds[0]); folds[0].classList.add('active'); jumps[0].classList.add('active');
     backBtn.disabled = true; track.style.width = (1 / total * 100) + '%';
-  }
-})();
-</script>
-<script>
-(function () {
-  function stipple(pathFn, count, box) {
-    var pts = [], tries = 0;
-    while (pts.length < count && tries < count * 30) {
-      tries++;
-      var x = box.x + Math.random() * box.w, y = box.y + Math.random() * box.h;
-      if (pathFn(x, y)) pts.push([x, y]);
-    }
-    return pts;
-  }
-  function sign(x1, y1, x2, y2, x3, y3) { return (x1 - x3) * (y2 - y3) - (x2 - x3) * (y1 - y3); }
-  var SHAPES = {
-    arrow: function (w, h) {
-      var pts = [];
-      var shaft = { x: w * 0.1, y: h * 0.42, w: w * 0.5, h: h * 0.16 };
-      pts = pts.concat(stipple(function (x, y) { return x >= shaft.x && x <= shaft.x + shaft.w && y >= shaft.y && y <= shaft.y + shaft.h; }, 40, shaft));
-      var ax = w * 0.55, ay = h * 0.18, bx = w * 0.55, by = h * 0.82, cx = w * 0.92, cy = h * 0.5;
-      var head = { x: w * 0.55, y: h * 0.18, w: w * 0.36, h: h * 0.64 };
-      pts = pts.concat(stipple(function (x, y) {
-        var d1 = sign(x, y, ax, ay, bx, by), d2 = sign(x, y, bx, by, cx, cy), d3 = sign(x, y, cx, cy, ax, ay);
-        var hasNeg = (d1 < 0) || (d2 < 0) || (d3 < 0), hasPos = (d1 > 0) || (d2 > 0) || (d3 > 0);
-        return !(hasNeg && hasPos);
-      }, 32, head));
-      return pts;
-    }
-  };
-  var glyphs = document.querySelectorAll('canvas.glyph');
-  for (var i = 0; i < glyphs.length; i++) {
-    var cv = glyphs[i];
-    var dpr = window.devicePixelRatio || 1;
-    var w = cv.width, h = cv.height;
-    cv.width = w * dpr; cv.height = h * dpr;
-    cv.style.width = w + 'px'; cv.style.height = h + 'px';
-    var ctx = cv.getContext('2d');
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    var fn = SHAPES[cv.getAttribute('data-shape')];
-    if (!fn) continue;
-    var pts = fn(w, h);
-    var color = getComputedStyle(document.body).getPropertyValue('--ink') || '#111';
-    ctx.fillStyle = color.trim() || '#111';
-    for (var j = 0; j < pts.length; j++) {
-      ctx.beginPath();
-      ctx.arc(pts[j][0], pts[j][1], 1.05, 0, Math.PI * 2);
-      ctx.fill();
-    }
   }
 })();
 </script>
