@@ -231,23 +231,19 @@
     requestAnimationFrame(draw);
 
     // Audio
-    var audioCtx;
+    var chimeSrc = (function () {
+      var probe = document.createElement('audio');
+      return probe.canPlayType('audio/mp4; codecs="mp4a.40.2"') ? 'plant.m4a' : 'plant.mp3';
+    })();
+    var chimeAudio = new Audio(chimeSrc);
+    chimeAudio.preload = 'auto';
     function unlockAudio() {
-      if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; } }
-      if (audioCtx.state === 'suspended') audioCtx.resume();
+      chimeAudio.play().then(function () { chimeAudio.pause(); chimeAudio.currentTime = 0; }).catch(function () {});
     }
     function playChime() {
-      if (!audioCtx) return;
-      var t0 = audioCtx.currentTime;
-      var osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(640, t0);
-      osc.frequency.exponentialRampToValueAtTime(920, t0 + 0.15);
-      gain.gain.setValueAtTime(0.0001, t0);
-      gain.gain.exponentialRampToValueAtTime(0.22, t0 + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.5);
-      osc.connect(gain); gain.connect(audioCtx.destination);
-      osc.start(t0); osc.stop(t0 + 0.55);
+      var el = chimeAudio.currentTime === 0 && chimeAudio.paused ? chimeAudio : chimeAudio.cloneNode(true);
+      el.currentTime = 0;
+      el.play().catch(function () {});
     }
 
     function onTouch(e) {
