@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FIELD — Prototype A (Hero-Flow)</title>
+<meta name="description" content="A/B Prototype: Hero-flow redesign" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:     #faf9f6;
+    --paper:  #ffffff;
+    --text:   #111;
+    --muted:  #666;
+    --faint:  #999;
+    --border: #111;
+    --accent:  #7c3aed;
+    --accent2: #c2410c;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    line-height: 1.55;
+    font-size: 16px;
+  }
+  .mono { font-family: 'DM Mono', monospace; }
+  .lbl {
+    font-family: 'Space Grotesk', sans-serif; font-size: .72rem; font-weight: 600;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
+  }
+  .wrap { max-width: 1320px; margin: 0 auto; padding: 0 5vw 130px; }
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 22px 7vw; position: sticky; top: 0; z-index: 20;
+    background: rgba(250,249,246,.9); backdrop-filter: blur(8px);
+    border-bottom: 2px solid var(--border);
+  }
+  .topbar .brand { display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+  .topbar .sq { width: 14px; height: 14px; border: 2px solid #111; display: inline-block; transform: rotate(45deg); }
+
+  /* ── Prototype A: Hero-flow approach ─────────────────────── */
+
+  /* Hero primary download */
+  .primary {
+    border: 2px solid var(--border); border-top: 5px solid var(--accent);
+    margin-top: 56px; padding: 34px 36px; background: var(--paper);
+    display: grid; grid-template-columns: 1fr auto; gap: 22px; align-items: center;
+    box-shadow: 9px 9px 0 var(--border);
+  }
+  .primary .meta h2 { font-size: 2.1rem; font-weight: 700; letter-spacing: -.02em; text-transform: uppercase; }
+  .primary .meta .sub { color: var(--muted); font-size: .95rem; margin-top: 6px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 14px; white-space: nowrap;
+    background: #111; color: #fff; text-decoration: none;
+    font-size: .88rem; font-weight: 500;
+    padding: 16px 26px; border: 2px solid #111; transition: .25s;
+  }
+  .btn:hover { background: #fff; color: #111; }
+
+  /* Downloads section */
+  section { margin-top: 118px; }
+  .head { display: flex; align-items: baseline; gap: 18px; margin-bottom: 48px; padding-bottom: 16px; border-bottom: 3px solid var(--border); }
+  .head h2 { font-size: 2.3rem; font-weight: 700; letter-spacing: -.02em; text-transform: uppercase; }
+  .head .tail { margin-left: auto; color: var(--faint); font-size: .95rem; }
+  .modules { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--border); border: 2px solid var(--border); }
+  .mod { background: var(--paper); padding: 24px; display: flex; flex-direction: column; }
+  .mod .os { font-size: 1.4rem; font-weight: 700; text-transform: uppercase; margin-bottom: 12px; }
+  .mod .arch { font-size: .82rem; color: var(--muted); margin-bottom: 20px; line-height: 1.5; }
+  .mod .dls { display: flex; flex-direction: column; gap: 10px; }
+  .mod .dls a { display: flex; align-items: center; justify-content: space-between; text-decoration: none; border: 2px solid var(--border); padding: 11px 14px; font-weight: 500; font-size: .9rem; transition: .2s; }
+  .mod .dls a.lead { background: #111; color: #fff; border-color: #111; }
+  .mod .dls a:hover { background: #111; color: #fff; border-color: #111; }
+
+  /* ── INSTALL SECTION: Bold single-column narrative ────────────── */
+  .install-section { margin-top: 160px; }
+  .install-section .head { margin-bottom: 64px; }
+  .install-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+    max-width: 680px;
+  }
+  .install-step {
+    display: flex;
+    gap: 32px;
+    align-items: flex-start;
+  }
+  .install-step .number {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 4.2rem;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+    min-width: 90px;
+    text-align: center;
+    letter-spacing: -.02em;
+  }
+  .install-step .content {
+    flex: 1;
+    padding-top: 8px;
+  }
+  .install-step .content p {
+    font-size: 1.15rem;
+    font-weight: 500;
+    line-height: 1.6;
+    color: var(--text);
+  }
+  .install-step .content p b { font-weight: 700; }
+
+  /* ── LEARN SECTION: Featured + grid ──────────────────────────── */
+  .learn-section { margin-top: 180px; }
+  .learn-section .head { margin-bottom: 54px; }
+
+  /* Featured guide */
+  .featured-guide {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    align-items: center;
+    margin-bottom: 80px;
+    background: #f5f4ef;
+    padding: 48px;
+    border: 2px solid var(--border);
+  }
+  .featured-guide .content h3 {
+    font-size: 2.8rem;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    line-height: 1.1;
+  }
+  .featured-guide .content .desc {
+    font-size: 1.1rem;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 28px;
+  }
+  .featured-guide .content dl {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .featured-guide .content dt {
+    font-size: .72rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--faint);
+    font-weight: 600;
+  }
+  .featured-guide .content dd {
+    font-size: .95rem;
+    color: var(--text);
+    line-height: 1.5;
+    font-weight: 500;
+  }
+  .featured-guide .badge {
+    display: inline-block;
+    background: var(--text);
+    color: #fff;
+    padding: 6px 12px;
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  .featured-guide .side {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--paper);
+    min-height: 300px;
+    border: 2px solid var(--border);
+    font-size: 3rem;
+    text-align: center;
+    padding: 20px;
+  }
+
+  /* Secondary guides grid */
+  .secondary-guides {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 2px solid var(--border);
+  }
+  .sec-guide {
+    background: var(--paper);
+    padding: 20px 18px;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    transition: background .2s;
+  }
+  .sec-guide:hover { background: #fbfaf7; }
+  .sec-guide .num { font-weight: 700; font-size: 1.3rem; color: var(--faint); margin-bottom: 12px; }
+  .sec-guide:nth-child(4n+1) .num { color: var(--accent); }
+  .sec-guide:nth-child(4n+2) .num { color: var(--accent2); }
+  .sec-guide h4 { font-size: 1.2rem; font-weight: 700; letter-spacing: -.01em; text-transform: uppercase; line-height: 1.2; margin-bottom: 10px; }
+  .sec-guide .desc { font-size: .82rem; color: var(--muted); line-height: 1.4; }
+  .sec-guide .go { font-size: .75rem; font-weight: 600; letter-spacing: .02em; color: var(--text); padding-top: 12px; margin-top: auto; }
+
+  /* ── FOUR WORDS: Visual-first layout ─────────────────────────── */
+  .recap-section { margin-top: 180px; }
+  .recap-section .head { margin-bottom: 54px; }
+  .recap-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+  .recap-card {
+    background: var(--paper);
+    border: 2px solid var(--border);
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    transition: transform .2s, box-shadow .2s;
+    cursor: pointer;
+  }
+  .recap-card:hover { transform: translateY(-4px); box-shadow: 9px 9px 0 var(--border); }
+  .recap-card .icon-box {
+    background: var(--text);
+    color: #fff;
+    padding: 40px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    min-height: 180px;
+    flex-shrink: 0;
+  }
+  .recap-card .text {
+    padding: 20px 18px;
+  }
+  .recap-card .title { font-weight: 700; font-size: 1.1rem; letter-spacing: -.01em; text-transform: uppercase; margin-bottom: 8px; }
+  .recap-card .description { font-size: .85rem; color: var(--muted); line-height: 1.5; }
+
+  footer {
+    margin-top: 120px; padding: 26px 0 4px; border-top: 2px solid var(--border);
+    font-size: .82rem; color: var(--muted);
+  }
+
+  .note {
+    margin-top: 22px; font-size: .9rem; color: var(--muted); line-height: 1.6;
+    border: 2px solid var(--border); padding: 16px 18px; background: var(--paper);
+  }
+  .note b { font-weight: 600; color: var(--text); }
+
+  @media (max-width: 900px) {
+    .install-step { gap: 20px; }
+    .install-step .number { font-size: 3rem; min-width: 70px; }
+    .featured-guide { grid-template-columns: 1fr; gap: 30px; padding: 32px; }
+    .secondary-guides { grid-template-columns: repeat(2, 1fr); }
+    .recap-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 560px) {
+    .primary { grid-template-columns: 1fr; }
+    .modules { grid-template-columns: 1fr; }
+    .install-steps { gap: 36px; }
+    .install-step { gap: 16px; }
+    .install-step .number { font-size: 2.4rem; min-width: 60px; }
+    .secondary-guides { grid-template-columns: 1fr; }
+    .recap-grid { grid-template-columns: 1fr; }
+    .featured-guide { padding: 24px; }
+  }
+</style>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-3F2MDQQS2Q"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-3F2MDQQS2Q');
+</script>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><span class="sq"></span>FIELD · Prototype A</div>
+  <div style="font-size:.72rem;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;">Hero-flow approach</div>
+</div>
+
+<div class="wrap">
+
+  <!-- Primary download -->
+  <div class="primary">
+    <div class="meta">
+      <h2>Download FIELD</h2>
+      <div class="sub">Pick the build for your machine below.</div>
+    </div>
+    <a class="btn" href="#all"><span>See all downloads</span> <span style="font-size:1.05rem;">→</span></a>
+  </div>
+
+  <!-- Downloads section -->
+  <section id="all">
+    <div class="head">
+      <h2>Downloads</h2>
+      <span class="tail lbl">4 builds</span>
+    </div>
+    <div class="modules">
+      <div class="mod">
+        <div class="os">macOS</div>
+        <div class="arch">Universal binary<br>Apple Silicon &amp; Intel · macOS 11+</div>
+        <div class="dls">
+          <a class="lead" href="#">.dmg <span class="k">Installer</span></a>
+          <a href="#">.zip <span class="k">Portable</span></a>
+        </div>
+      </div>
+      <div class="mod">
+        <div class="os">Windows</div>
+        <div class="arch">64-bit<br>Windows 10 / 11</div>
+        <div class="dls">
+          <a class="lead" href="#">.exe <span class="k">Installer</span></a>
+          <a href="#">.zip <span class="k">Portable</span></a>
+        </div>
+      </div>
+    </div>
+    <p class="note">
+      <b>First launch.</b> The app is not code-signed yet, so your OS asks once.
+    </p>
+  </section>
+
+  <!-- INSTALL SECTION: Bold narrative flow -->
+  <section class="install-section">
+    <div class="head">
+      <h2>Install &amp; first run</h2>
+      <span class="tail lbl">≈ 3 min</span>
+    </div>
+    <div class="install-steps">
+      <div class="install-step">
+        <div class="number">01</div>
+        <div class="content">
+          <p>Open <b>FIELD</b>. It starts a small server on your computer.</p>
+        </div>
+      </div>
+      <div class="install-step">
+        <div class="number">02</div>
+        <div class="content">
+          <p>Put your <b>phone and computer on the same Wi-Fi</b>.</p>
+        </div>
+      </div>
+      <div class="install-step">
+        <div class="number">03</div>
+        <div class="content">
+          <p>Open the <b>Sensors</b> panel. Scan the QR code with your phone.</p>
+        </div>
+      </div>
+      <div class="install-step">
+        <div class="number">04</div>
+        <div class="content">
+          <p>Draw a <b>Cue</b> from a sensor to an output. Tilt your phone — the canvas responds.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LEARN SECTION: Featured + secondary -->
+  <section class="learn-section">
+    <div class="head">
+      <h2>Learn &amp; build</h2>
+      <span class="tail lbl">5 guides</span>
+    </div>
+
+    <!-- Featured guide -->
+    <div class="featured-guide">
+      <div class="content">
+        <div class="badge">No code · In the app</div>
+        <h3>First FIELD</h3>
+        <p class="desc">Make one working connection: your phone's tilt or touch moves something on the canvas. Everything you need to start in one guided walkthrough.</p>
+        <dl>
+          <div>
+            <dt>Use it when</dt>
+            <dd>You just installed FIELD and want a first prototype fast.</dd>
+          </div>
+          <div>
+            <dt>How to start</dt>
+            <dd>Open it, get phone + computer on one Wi-Fi, follow each step.</dd>
+          </div>
+        </dl>
+        <a class="btn" href="#"><span>Open guide</span> <span style="font-size:1.05rem;">→</span></a>
+      </div>
+      <div class="side">🎬</div>
+    </div>
+
+    <!-- Secondary guides -->
+    <div class="secondary-guides">
+      <a class="sec-guide" href="#">
+        <div class="num">02</div>
+        <h4>Connect Two Things</h4>
+        <p class="desc">Two phones, two boards, or a phone and a board.</p>
+        <span class="go">Open →</span>
+      </a>
+      <a class="sec-guide" href="#">
+        <div class="num">★</div>
+        <h4>Live Pairing Demo</h4>
+        <p class="desc">Try FIELD in your browser right now — no install needed.</p>
+        <span class="go">Try it →</span>
+      </a>
+      <a class="sec-guide" href="#">
+        <div class="num">03</div>
+        <h4>Add a Custom Sensor</h4>
+        <p class="desc">Write, install, and test a plugin for your sensor chip.</p>
+        <span class="go">Open →</span>
+      </a>
+      <a class="sec-guide" href="#">
+        <div class="num">04</div>
+        <h4>Build with JavaScript</h4>
+        <p class="desc">Read FIELD values in your own sketch via <code>field-bridge.js</code>.</p>
+        <span class="go">Open →</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- FOUR WORDS: Visual-first cards -->
+  <section class="recap-section">
+    <div class="head">
+      <h2>Four words</h2>
+      <span class="tail lbl">Everything else is built from these</span>
+    </div>
+    <div class="recap-grid">
+      <div class="recap-card">
+        <div class="icon-box">🎭</div>
+        <div class="text">
+          <div class="title">Actor</div>
+          <p class="description">Anything in your physical surroundings that acts or performs.</p>
+        </div>
+      </div>
+      <div class="recap-card">
+        <div class="icon-box">⚙️</div>
+        <div class="text">
+          <div class="title">Role</div>
+          <p class="description">The job an Actor plays — sensing or reacting to things.</p>
+        </div>
+      </div>
+      <div class="recap-card">
+        <div class="icon-box">➤</div>
+        <div class="text">
+          <div class="title">Cue</div>
+          <p class="description">The rule for when and how two Actors act together.</p>
+        </div>
+      </div>
+      <div class="recap-card">
+        <div class="icon-box">⚡</div>
+        <div class="text">
+          <div class="title">Mechanism</div>
+          <p class="description">The exact way the action plays out — you pick it.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer style="margin-top:120px;">
+    <span>Everything runs locally — no cloud, no account, no tracking.</span>
+  </footer>
+
+</div>
+</body>
+</html>

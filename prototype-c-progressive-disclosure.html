@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FIELD — Prototype C (Progressive Disclosure)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:     #faf9f6;
+    --paper:  #ffffff;
+    --text:   #111;
+    --muted:  #666;
+    --faint:  #999;
+    --border: #111;
+    --accent:  #7c3aed;
+    --accent2: #c2410c;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    line-height: 1.55;
+    font-size: 16px;
+  }
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 22px 7vw; position: sticky; top: 0; z-index: 30;
+    background: rgba(250,249,246,.95); backdrop-filter: blur(8px);
+    border-bottom: 2px solid var(--border);
+  }
+  .topbar .brand { display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+  .topbar .sq { width: 14px; height: 14px; border: 2px solid #111; display: inline-block; transform: rotate(45deg); }
+
+  /* Primary download */
+  .primary-section {
+    max-width: 1320px; margin: 0 auto; padding: 56px 5vw 0;
+  }
+  .primary {
+    border: 2px solid var(--border); border-top: 5px solid var(--accent);
+    padding: 34px 36px; background: var(--paper);
+    display: grid; grid-template-columns: 1fr auto; gap: 22px; align-items: center;
+    box-shadow: 9px 9px 0 var(--border);
+  }
+  .primary .meta h2 { font-size: 2.1rem; font-weight: 700; letter-spacing: -.02em; text-transform: uppercase; }
+  .primary .meta .sub { color: var(--muted); font-size: .95rem; margin-top: 6px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 14px; white-space: nowrap;
+    background: #111; color: #fff; text-decoration: none;
+    font-size: .88rem; font-weight: 500;
+    padding: 16px 26px; border: 2px solid #111; transition: .25s;
+  }
+  .btn:hover { background: #fff; color: #111; }
+
+  .note {
+    margin-top: 22px; font-size: .9rem; color: var(--muted); line-height: 1.6;
+    border: 2px solid var(--border); padding: 16px 18px; background: var(--paper);
+  }
+  .note b { font-weight: 600; color: var(--text); }
+
+  .downloads-grid {
+    max-width: 1320px; margin: 80px auto 0; padding: 0 5vw;
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px;
+    background: var(--border); border: 2px solid var(--border); margin-bottom: 120px;
+  }
+  .dl-mod { background: var(--paper); padding: 24px; }
+  .dl-mod .os { font-size: 1.4rem; font-weight: 700; text-transform: uppercase; margin-bottom: 12px; }
+  .dl-mod .arch { font-size: .82rem; color: var(--muted); margin-bottom: 16px; line-height: 1.5; }
+  .dl-mod .dls { display: flex; flex-direction: column; gap: 10px; }
+  .dl-mod .dls a { display: flex; align-items: center; justify-content: space-between; text-decoration: none; border: 2px solid var(--border); padding: 11px 14px; font-weight: 500; font-size: .9rem; transition: .2s; }
+  .dl-mod .dls a.lead { background: #111; color: #fff; border-color: #111; }
+  .dl-mod .dls a:hover { background: #111; color: #fff; border-color: #111; }
+
+  /* ── Progressive Disclosure Sections ──────────────────────── */
+  .disclosure-section {
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 5vw;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .section-content {
+    max-width: 920px;
+    width: 100%;
+    opacity: 0;
+    transform: translateY(40px);
+    transition: none;
+  }
+  .section-content.visible {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Install Section */
+  .install-section {
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.03) 0%, rgba(124, 58, 237, 0) 100%);
+  }
+
+  .install-head {
+    margin-bottom: 60px;
+  }
+  .install-head h2 {
+    font-size: clamp(2.4rem, 5vw, 3.6rem);
+    font-weight: 700;
+    letter-spacing: -.02em;
+    text-transform: uppercase;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+  .install-head .tag {
+    font-size: .72rem; font-weight: 600; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--muted);
+  }
+
+  .install-item {
+    margin-bottom: 48px;
+    padding-bottom: 40px;
+    border-bottom: 1px solid #e0dfdb;
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  .install-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .install-item.show {
+    opacity: 1;
+    transform: translateX(0);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .install-item:nth-child(1) { transition-delay: 0.2s; }
+  .install-item:nth-child(2) { transition-delay: 0.35s; }
+  .install-item:nth-child(3) { transition-delay: 0.5s; }
+  .install-item:nth-child(4) { transition-delay: 0.65s; }
+
+  .install-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 3.2rem;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 12px;
+    letter-spacing: -.02em;
+  }
+  .install-item p {
+    font-size: 1.2rem;
+    line-height: 1.65;
+    color: var(--text);
+  }
+  .install-item p b { font-weight: 700; }
+
+  /* Learn Section */
+  .learn-section {
+    background: linear-gradient(135deg, rgba(196, 65, 12, 0.03) 0%, rgba(196, 65, 12, 0) 100%);
+  }
+
+  .learn-head {
+    margin-bottom: 60px;
+    text-align: center;
+  }
+  .learn-head h2 {
+    font-size: clamp(2.4rem, 5vw, 3.6rem);
+    font-weight: 700;
+    letter-spacing: -.02em;
+    text-transform: uppercase;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+  .learn-head .tag {
+    font-size: .72rem; font-weight: 600; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--muted);
+  }
+
+  .guide-carousel {
+    position: relative;
+    min-height: 420px;
+  }
+
+  .guide-card {
+    background: var(--paper);
+    border: 2px solid var(--border);
+    padding: 48px;
+    position: absolute;
+    width: 100%;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(60px);
+  }
+  .guide-card.active {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(0);
+    position: relative;
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .guide-card.prev {
+    transform: translateX(-60px);
+  }
+
+  .guide-badge {
+    display: inline-block;
+    background: var(--text);
+    color: #fff;
+    padding: 6px 14px;
+    font-size: .68rem;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .guide-card h3 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    line-height: 1.2;
+  }
+  .guide-card .desc {
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: var(--muted);
+    margin-bottom: 32px;
+  }
+  .guide-card dl {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    margin-bottom: 32px;
+  }
+  .guide-card dt {
+    font-size: .72rem; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--faint); font-weight: 600; margin-bottom: 8px;
+  }
+  .guide-card dd {
+    font-size: .95rem; color: var(--text); line-height: 1.55; font-weight: 500;
+  }
+  .guide-card .go {
+    display: inline-block;
+    font-size: .85rem; font-weight: 600; color: var(--text);
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 2px;
+    text-decoration: none;
+  }
+  .guide-card .go:hover { color: var(--accent); border-color: var(--accent); }
+
+  .carousel-nav {
+    display: flex; align-items: center; justify-content: center; gap: 16px;
+    margin-top: 40px;
+  }
+  .carousel-btn {
+    background: none; border: 2px solid var(--border);
+    padding: 10px 16px; font-size: .85rem; font-weight: 600;
+    text-transform: uppercase; cursor: pointer; transition: .2s;
+  }
+  .carousel-btn:hover { background: var(--border); color: #fff; }
+  .carousel-dots {
+    display: flex; gap: 8px;
+  }
+  .carousel-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #e0dfdb; cursor: pointer; transition: .2s;
+  }
+  .carousel-dot.active { background: var(--accent); }
+
+  /* Four Words Section */
+  .words-section {
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(196, 65, 12, 0.03) 100%);
+  }
+
+  .words-head {
+    margin-bottom: 60px;
+    text-align: center;
+  }
+  .words-head h2 {
+    font-size: clamp(2.4rem, 5vw, 3.6rem);
+    font-weight: 700;
+    letter-spacing: -.02em;
+    text-transform: uppercase;
+    line-height: 1.1;
+  }
+
+  .words-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px;
+  }
+
+  .word-card {
+    background: var(--paper);
+    border: 3px solid var(--border);
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    transform: scale(0.92) translateY(30px);
+  }
+  .word-card.visible {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .word-card:nth-child(1) { transition-delay: 0.1s; }
+  .word-card:nth-child(2) { transition-delay: 0.25s; }
+  .word-card:nth-child(3) { transition-delay: 0.4s; }
+  .word-card:nth-child(4) { transition-delay: 0.55s; }
+
+  .word-icon {
+    background: var(--text);
+    color: #fff;
+    padding: 48px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3.4rem;
+    min-height: 200px;
+  }
+  .word-text {
+    padding: 28px 24px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .word-title {
+    font-weight: 700;
+    font-size: 1.3rem;
+    text-transform: uppercase;
+    letter-spacing: -.01em;
+    margin-bottom: 12px;
+  }
+  .word-desc {
+    font-size: .95rem;
+    color: var(--muted);
+    line-height: 1.6;
+    flex: 1;
+  }
+
+  footer {
+    max-width: 1320px; margin: 120px auto 0; padding: 26px 5vw 40px; border-top: 2px solid var(--border);
+    font-size: .82rem; color: var(--muted);
+  }
+
+  /* Spacer between sections */
+  .section-spacer {
+    height: 60px;
+  }
+
+  @media (max-width: 900px) {
+    .words-grid { grid-template-columns: 1fr; }
+    .guide-card dl { grid-template-columns: 1fr; gap: 20px; }
+    .disclosure-section { min-height: auto; padding: 80px 5vw; }
+  }
+  @media (max-width: 560px) {
+    .primary { grid-template-columns: 1fr; }
+    .downloads-grid { grid-template-columns: 1fr; }
+    .guide-card { padding: 32px 24px; }
+    .install-num { font-size: 2.4rem; }
+    .install-item p { font-size: 1.05rem; }
+  }
+</style>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-3F2MDQQS2Q"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-3F2MDQQS2Q');
+</script>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><span class="sq"></span>FIELD · Prototype C</div>
+  <div style="font-size:.72rem;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;">Progressive disclosure</div>
+</div>
+
+<!-- Primary download -->
+<div class="primary-section">
+  <div class="primary">
+    <div class="meta">
+      <h2>Download FIELD</h2>
+      <div class="sub" style="color:var(--muted);font-size:.95rem;margin-top:6px;">Pick the build for your machine below.</div>
+    </div>
+    <a class="btn" href="#all"><span>See all downloads</span> <span style="font-size:1.05rem;">→</span></a>
+  </div>
+</div>
+
+<div class="downloads-grid" id="all">
+  <div class="dl-mod">
+    <div class="os">macOS</div>
+    <div class="arch">Universal binary<br>Apple Silicon &amp; Intel · macOS 11+</div>
+    <div class="dls">
+      <a class="lead" href="#">.dmg <span style="font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);font-weight:400;">Installer</span></a>
+      <a href="#">.zip <span style="font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);font-weight:400;">Portable</span></a>
+    </div>
+  </div>
+  <div class="dl-mod">
+    <div class="os">Windows</div>
+    <div class="arch">64-bit<br>Windows 10 / 11</div>
+    <div class="dls">
+      <a class="lead" href="#">.exe <span style="font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);font-weight:400;">Installer</span></a>
+      <a href="#">.zip <span style="font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);font-weight:400;">Portable</span></a>
+    </div>
+  </div>
+</div>
+
+<!-- Install Section -->
+<section class="disclosure-section install-section">
+  <div class="section-content" data-section="install">
+    <div class="install-head">
+      <h2>Install &amp; first run</h2>
+      <div class="tag">≈ 3 min</div>
+    </div>
+    <div class="install-items">
+      <div class="install-item">
+        <div class="install-num">01</div>
+        <p>Open <b>FIELD</b>. It starts a small server on your computer.</p>
+      </div>
+      <div class="install-item">
+        <div class="install-num">02</div>
+        <p>Put your <b>phone and computer on the same Wi-Fi</b>.</p>
+      </div>
+      <div class="install-item">
+        <div class="install-num">03</div>
+        <p>Open the <b>Sensors</b> panel. Scan the QR code with your phone.</p>
+      </div>
+      <div class="install-item">
+        <div class="install-num">04</div>
+        <p>Draw a <b>Cue</b> from a sensor to an output. Tilt your phone — the canvas responds.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-spacer"></div>
+
+<!-- Learn Section -->
+<section class="disclosure-section learn-section">
+  <div class="section-content" data-section="learn">
+    <div class="learn-head">
+      <h2>Learn &amp; build</h2>
+      <div class="tag">5 guides</div>
+    </div>
+
+    <div class="guide-carousel">
+      <div class="guide-card active" data-guide="0">
+        <div class="guide-badge">No code · In the app</div>
+        <h3>First FIELD</h3>
+        <p class="desc">Make one working connection: your phone's tilt or touch moves something on the canvas.</p>
+        <dl>
+          <div>
+            <dt>Use it when</dt>
+            <dd>You just installed FIELD and want a first prototype fast.</dd>
+          </div>
+          <div>
+            <dt>How to start</dt>
+            <dd>Open it, get phone + computer on one Wi-Fi, follow each step.</dd>
+          </div>
+        </dl>
+        <a href="#" class="go">Open guide →</a>
+      </div>
+
+      <div class="guide-card" data-guide="1">
+        <div class="guide-badge">No code · In the app</div>
+        <h3>Connect Two Things</h3>
+        <p class="desc">Two phones, two boards, or a phone and a board — talking to each other or to one canvas.</p>
+        <dl>
+          <div>
+            <dt>Use it when</dt>
+            <dd>One sensor works and you're ready to combine more than one.</dd>
+          </div>
+          <div>
+            <dt>How to start</dt>
+            <dd>Finish "First FIELD" first, then open this guide.</dd>
+          </div>
+        </dl>
+        <a href="#" class="go">Open guide →</a>
+      </div>
+
+      <div class="guide-card" data-guide="2">
+        <div class="guide-badge">Try it now · No install</div>
+        <h3>Live Pairing Demo</h3>
+        <p class="desc">Open this page on your phone and your computer. Enter a 6-digit code to pair them, then shake or swipe your phone and watch a shape react live.</p>
+        <dl>
+          <div>
+            <dt>Use it when</dt>
+            <dd>You want to feel what FIELD does before installing anything.</dd>
+          </div>
+          <div>
+            <dt>How to start</dt>
+            <dd>Open it on two devices — no FIELD app required.</dd>
+          </div>
+        </dl>
+        <a href="#" class="go">Try the demo →</a>
+      </div>
+
+      <div class="guide-card" data-guide="3">
+        <div class="guide-badge">No code · In the app</div>
+        <h3>Add a Custom Sensor</h3>
+        <p class="desc">Step-by-step: write, install, and test a plugin for a sensor chip FIELD doesn't know yet.</p>
+        <dl>
+          <div>
+            <dt>Use it when</dt>
+            <dd>Your chip isn't built in and you want a guided walkthrough, not just a spec.</dd>
+          </div>
+          <div>
+            <dt>How to start</dt>
+            <dd>Open it — no download, reads right in your browser.</dd>
+          </div>
+        </dl>
+        <a href="#" class="go">Open guide →</a>
+      </div>
+
+      <div class="guide-card" data-guide="4">
+        <div class="guide-badge">Code · p5.js & web</div>
+        <h3>Build with JavaScript</h3>
+        <p class="desc">Read live FIELD values in your own sketch or web page via <code>field-bridge.js</code>.</p>
+        <dl>
+          <div>
+            <dt>Use it when</dt>
+            <dd>You want custom visuals, sound, or a page that reacts in real time.</dd>
+          </div>
+          <div>
+            <dt>How to start</dt>
+            <dd>Open it — no download, one worked example, then the spec.</dd>
+          </div>
+        </dl>
+        <a href="#" class="go">Open guide →</a>
+      </div>
+    </div>
+
+    <div class="carousel-nav">
+      <button class="carousel-btn" id="prevGuide">← Back</button>
+      <div class="carousel-dots" id="guideDots">
+        <div class="carousel-dot active" data-index="0"></div>
+        <div class="carousel-dot" data-index="1"></div>
+        <div class="carousel-dot" data-index="2"></div>
+        <div class="carousel-dot" data-index="3"></div>
+        <div class="carousel-dot" data-index="4"></div>
+      </div>
+      <button class="carousel-btn" id="nextGuide">Next →</button>
+    </div>
+  </div>
+</section>
+
+<div class="section-spacer"></div>
+
+<!-- Four Words Section -->
+<section class="disclosure-section words-section">
+  <div class="section-content" data-section="words">
+    <div class="words-head">
+      <h2>Four words</h2>
+    </div>
+
+    <div class="words-grid" id="wordsGrid">
+      <div class="word-card">
+        <div class="word-icon">🎭</div>
+        <div class="word-text">
+          <div class="word-title">Actor</div>
+          <div class="word-desc">Anything in your physical surroundings that acts or performs an action.</div>
+        </div>
+      </div>
+
+      <div class="word-card">
+        <div class="word-icon">⚙️</div>
+        <div class="word-text">
+          <div class="word-title">Role</div>
+          <div class="word-desc">The job an Actor plays — sensing or reacting to things.</div>
+        </div>
+      </div>
+
+      <div class="word-card">
+        <div class="word-icon">➤</div>
+        <div class="word-text">
+          <div class="word-title">Cue</div>
+          <div class="word-desc">The rule for when and how two Actors act together.</div>
+        </div>
+      </div>
+
+      <div class="word-card">
+        <div class="word-icon">⚡</div>
+        <div class="word-text">
+          <div class="word-title">Mechanism</div>
+          <div class="word-desc">The exact manner the action plays out — you pick it.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span>Everything runs locally — no cloud, no account, no tracking.</span>
+</footer>
+
+<script>
+  // Progressive disclosure on scroll
+  const sections = document.querySelectorAll('[data-section]');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        const installItems = entry.target.querySelectorAll('.install-item');
+        installItems.forEach(item => item.classList.add('show'));
+        const wordCards = entry.target.querySelectorAll('.word-card');
+        wordCards.forEach(card => card.classList.add('visible'));
+      }
+    });
+  }, { threshold: 0.2 });
+
+  sections.forEach(section => observer.observe(section));
+
+  // Guide carousel
+  let currentGuide = 0;
+  const guideCards = document.querySelectorAll('.guide-card');
+  const guideDots = document.querySelectorAll('.carousel-dot');
+  const totalGuides = guideCards.length;
+
+  function updateGuide(index) {
+    guideCards.forEach(card => {
+      card.classList.remove('active', 'prev');
+      if (card.dataset.guide == index) {
+        card.classList.add('active');
+      } else if (card.dataset.guide < index) {
+        card.classList.add('prev');
+      }
+    });
+    guideDots.forEach((dot, i) => {
+      dot.classList.toggle('active', i === index);
+    });
+    currentGuide = index;
+  }
+
+  document.getElementById('nextGuide').addEventListener('click', () => {
+    updateGuide((currentGuide + 1) % totalGuides);
+  });
+
+  document.getElementById('prevGuide').addEventListener('click', () => {
+    updateGuide((currentGuide - 1 + totalGuides) % totalGuides);
+  });
+
+  guideDots.forEach(dot => {
+    dot.addEventListener('click', () => {
+      updateGuide(parseInt(dot.dataset.index));
+    });
+  });
+</script>
+</body>
+</html>

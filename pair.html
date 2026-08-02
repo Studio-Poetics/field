@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>FIELD — Live Pairing Demo</title>
-<meta name="description" content="Pair your phone with this page in seconds. Shake it, swipe it — watch FIELD turn motion into a live physical-digital scene, no install required." />
+<title>FIELD Live Demo — Pair Your Phone | Real-Time Wireless Prototyping</title>
+<meta name="description" content="Experience FIELD instantly. Pair your phone with this page — no install required. Shake, tilt, and touch your phone to see real-time wireless interaction. Free Arduino and ESP-NOW alternative demo." />
+<meta name="keywords" content="FIELD demo, real-time interaction, wireless prototyping, sensor demo, Arduino alternative, IoT" />
 <link rel="icon" href="icon.png" />
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -155,6 +156,34 @@
   body.phone-active .touchsurface { flex: 1; min-height: 0; height: auto; margin-top: 2vh; }
   body.phone-active footer { flex: none; padding: 1.4vh 6vw; }
 </style>
+
+<!-- Structured Data (Interactive Demo) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "FIELD Live Pairing Demo",
+  "description": "Experience FIELD instantly. Open this page on a phone and desktop. Pair them with a 6-digit code. Tilt, shake, or swipe your phone and watch the desktop respond in real time. No install required.",
+  "url": "https://field.app/pair.html",
+  "applicationCategory": "InteractiveApp",
+  "operatingSystem": "Web",
+  "browserRequirements": "WebRTC and WebSocket support required",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  }
+}
+</script>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-3F2MDQQS2Q"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-3F2MDQQS2Q');
+</script>
 </head>
 <body>
 

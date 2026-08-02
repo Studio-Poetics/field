@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Add a Custom Sensor — a FIELD guide</title>
+<title>Create Custom Sensor Plugins for FIELD | Arduino Hardware Integration</title>
+<meta name="description" content="Extend FIELD with custom sensors and hardware components. Create plugins for Arduino, BLE, and ESP-NOW devices. No complex coding required." />
+<meta name="keywords" content="FIELD plugins, custom sensors, hardware integration, Arduino, sensor libraries, IoT extension" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -218,6 +220,55 @@
     .menu { top: 14px; right: 14px; }
   }
 </style>
+
+<!-- Structured Data (Plugin Development) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "Create Custom Sensor Plugins for FIELD | Arduino Hardware Integration",
+  "description": "Extend FIELD with support for custom sensors and hardware components. Write plugins for Arduino, BLE, and ESP-NOW devices without complex coding.",
+  "url": "https://field.app/plugins.html",
+  "tool": [
+    {
+      "@type": "HowToTool",
+      "name": "FIELD Plugin JSON format",
+      "url": "https://field.app/learn.html#plugins"
+    },
+    {
+      "@type": "HowToTool",
+      "name": "Arduino / C++ IDE",
+      "url": "https://www.arduino.cc"
+    }
+  ],
+  "step": [
+    {
+      "@type": "HowToStep",
+      "name": "Write a plugin JSON file",
+      "text": "Define your sensor's role, codegen includes, and configuration options."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Add Arduino codegen templates",
+      "text": "Write C++ snippets for setup, loop, and data parsing."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Load and test in FIELD",
+      "text": "Import your plugin, create an Actor with your custom sensor, and test on hardware."
+    }
+  ]
+}
+</script>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-3F2MDQQS2Q"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-3F2MDQQS2Q');
+</script>
 </head>
 <body>
 

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Primary entry point: home/download + intro to all four concepts -->
+  <url>
+    <loc>https://studio-poetics.github.io/field/</loc>
+    <lastmod>2026-08-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- Learning path: tutorial for getting started -->
+  <url>
+    <loc>https://studio-poetics.github.io/field/learn.html</loc>
+    <lastmod>2026-08-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Multi-device: phone + Arduino + wireless pairing guide -->
+  <url>
+    <loc>https://studio-poetics.github.io/field/connect.html</loc>
+    <lastmod>2026-08-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Extensibility: how to write plugins for custom sensors -->
+  <url>
+    <loc>https://studio-poetics.github.io/field/plugins.html</loc>
+    <lastmod>2026-08-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Live interactive demo: phone pairing experience (zero install) -->
+  <url>
+    <loc>https://studio-poetics.github.io/field/pair.html</loc>
+    <lastmod>2026-08-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- AI + coding showcase: example integrations with ChatGPT, Claude, AI models -->
+  <url>
+    <loc>https://studio-poetics.github.io/field/ai-coding.html</loc>
+    <lastmod>2026-08-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Archive: reference design from r13 (kept for historical/comparison view) -->
+  <url>
+    <loc>https://studio-poetics.github.io/field/sample.html</loc>
+    <lastmod>2026-08-02</lastmod>
+    <changefreq>never</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <!-- Plant-responsive interactive demo (phone guest side of pair flow) -->
+  <url>
+    <loc>https://studio-poetics.github.io/field/plant.html</loc>
+    <lastmod>2026-08-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Prototype showcase: interactive design explorations (research/inspiration) -->
+  <url>
+    <loc>https://studio-poetics.github.io/field/prototype-a-plant.html</loc>
+    <lastmod>2026-08-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://studio-poetics.github.io/field/prototype-b-speaker.html</loc>
+    <lastmod>2026-08-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://studio-poetics.github.io/field/prototype-c-multi.html</loc>
+    <lastmod>2026-08-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+</urlset>

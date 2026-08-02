@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FIELD • MOVE + GLOW Demo</title>
+<style>
+html, body {
+  margin: 0;
+  overflow: hidden;
+  background: #111;
+}
+canvas {
+  display: block;
+}
+</style>
+</head>
+
+<body>
+
+<script src="https://cdn.jsdelivr.net/npm/p5@1.9.4/lib/p5.min.js"></script>
+<script src="./field-bridge.js"></script>
+
+<script>
+function setup() {
+  createCanvas(windowWidth, windowHeight);
+  noStroke();
+}
+
+function draw() {
+  background(13, 12, 10);
+
+  const move = field.get('MOVE') ?? 0.5;   // Ball's Cue output, 0-1
+  const x = move * width;                  // 0-1 -> across the screen
+
+  fill(124, 58, 237);
+  circle(x, height / 2, 60);
+
+  fill(255); textSize(12); textFont('monospace');
+  text(field.connected ? 'FIELD ● live' : 'FIELD ○ waiting…', 16, 24);
+}
+
+function windowResized() { resizeCanvas(windowWidth, windowHeight); }
+</script>
+
+</body>
+</html>
