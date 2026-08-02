@@ -131,6 +131,17 @@
     join(code);
   });
 
+  // ── Auto-join from a scanned QR link (?code=123456) — skips manual entry ─
+  (function () {
+    var params = new URLSearchParams(location.search);
+    var qrCode = (params.get('code') || '').replace(/\D/g, '').slice(0, 6);
+    if (qrCode.length === 6) {
+      codeInput.value = qrCode;
+      setMsg('Connecting…');
+      join(qrCode);
+    }
+  })();
+
   function showPlant() {
     joinScreen.style.display = 'none';
     plantScreen.classList.add('show');

@@ -74,8 +74,14 @@
   .shapebtn.active { background: var(--line); color: var(--bg); }
 
   /* ── Room code display ───────────────────────────────── */
-  .codebox { margin-top: 40px; }
+  .codebox { margin-top: 40px; display: flex; gap: 32px; flex-wrap: wrap; align-items: flex-start; }
   .codebox .lbl { font-size: .78rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .qrbox {
+    width: 132px; height: 132px; border: 3px solid var(--line); background: #fff;
+    display: flex; align-items: center; justify-content: center; padding: 8px; flex: none;
+  }
+  .qrbox img, .qrbox svg { width: 100%; height: 100%; display: block; }
+  .qrcol .lbl { margin-bottom: 10px; }
   .codedigits { display: flex; gap: 10px; margin-top: 14px; }
   .codedigits span {
     display: inline-flex; align-items: center; justify-content: center;
@@ -187,9 +193,15 @@
     </div>
 
     <div class="codebox">
-      <div class="lbl">Room code — enter this on your phone</div>
-      <div class="codedigits" id="code-digits"></div>
-      <div class="codehelp">Open <span class="mono" id="url-hint"></span> on your phone, choose "Drive the scene," and type this code.</div>
+      <div class="qrcol">
+        <div class="lbl">Scan to connect</div>
+        <div class="qrbox" id="qr-box"></div>
+      </div>
+      <div>
+        <div class="lbl">Or type this code</div>
+        <div class="codedigits" id="code-digits"></div>
+        <div class="codehelp">Open <span class="mono" id="url-hint"></span> on your phone, choose "Drive the scene," and type this code.</div>
+      </div>
     </div>
 
     <div class="status" id="host-status"><span class="dot"></span>waiting for phone…</div>
@@ -228,6 +240,7 @@
 
 <footer>FIELD — a visual canvas for physical-digital prototypes. This demo runs over a direct WebRTC connection between your two devices.</footer>
 
+<script src="qrcode.js"></script>
 <script>
 (function () {
   const SIGNAL_URL = 'wss://field-pair-signal.pkch101.workers.dev';
@@ -241,6 +254,30 @@
 
   $('pick-host').onclick = () => { show('host-view'); startHost(); };
   $('pick-guest').onclick = () => { show('guest-view'); document.body.classList.add('phone-active'); };
+
+  function renderQr(code) {
+    const box = $('qr-box');
+    if (!box || typeof qrcode !== 'function') return;
+    const url = location.origin + location.pathname + '?code=' + code;
+    const qr = qrcode(0, 'M');
+    qr.addData(url);
+    qr.make();
+    box.innerHTML = qr.createSvgTag({ scalable: true });
+  }
+
+  // ── Auto-fill from a scanned QR link (?code=123456) — skips the picker + typing.
+  // Guest connect still needs one real tap (iOS requires a user gesture to grant
+  // motion-sensor permission), so we prefill + focus the button rather than auto-clicking.
+  (function () {
+    const params = new URLSearchParams(location.search);
+    const qrCode = (params.get('code') || '').replace(/\D/g, '').slice(0, 6);
+    if (qrCode.length === 6) {
+      show('guest-view');
+      document.body.classList.add('phone-active');
+      $('code-input').value = qrCode;
+      requestAnimationFrame(() => $('join-btn').focus());
+    }
+  })();
 
   // ── shared WebRTC plumbing ──────────────────────────────
   function makeSignaling(role, code) {
@@ -275,6 +312,7 @@
   function startHost() {
     const code = randomCode();
     $('code-digits').innerHTML = code.split('').map(d => `<span>${d}</span>`).join('');
+    renderQr(code);
 
     ws = makeSignaling('host', code);
     ws.onopen = () => setHostStatus('waiting', 'room open — waiting for phone…');

@@ -119,11 +119,17 @@
   .pairbox .eyebrow .sq { width: 8px; height: 8px; border: 2px solid #111; display: inline-block; transform: rotate(45deg); }
   .pairbox h2 { font-size: 1.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: -.01em; }
   .pairbox p.sub { margin-top: 10px; color: var(--muted); font-size: .92rem; }
-  .pairbox .codedigits { display: flex; gap: 7px; justify-content: center; margin: 26px 0 16px; }
+  .pairbox .qrwrap { display: flex; justify-content: center; margin: 24px 0 14px; }
+  .pairbox .qrbox {
+    width: 176px; height: 176px; border: 2px solid var(--border); background: #fff;
+    display: flex; align-items: center; justify-content: center; padding: 10px;
+  }
+  .pairbox .qrbox img, .pairbox .qrbox svg { width: 100%; height: 100%; display: block; }
+  .pairbox .codedigits { display: flex; gap: 5px; justify-content: center; margin: 0 0 14px; }
   .pairbox .codedigits span {
-    width: 46px; height: 60px; border: 2px solid var(--border); background: var(--bg);
+    width: 32px; height: 42px; border: 2px solid var(--border); background: var(--bg);
     display: flex; align-items: center; justify-content: center;
-    font-family: 'DM Mono', monospace; font-size: 1.8rem; font-weight: 700;
+    font-family: 'DM Mono', monospace; font-size: 1.2rem; font-weight: 700;
     transition: background .2s, color .2s;
   }
   .pairbox .codedigits span:nth-child(odd) { background: #f0efe9; }
@@ -333,9 +339,10 @@
       <div class="pairbox" id="pairBox">
         <span class="eyebrow"><span class="sq"></span>Live demo</span>
         <h2>Connect your phone</h2>
-        <p class="sub">Open this on your phone. It'll show just the plant.</p>
+        <p class="sub">Scan with your phone camera. No typing.</p>
+        <div class="qrwrap" id="qrWrap"><div class="qrbox" id="qrBox"></div></div>
         <div class="codedigits" id="codeDigits"><span>·</span><span>·</span><span>·</span><span>·</span><span>·</span><span>·</span></div>
-        <div class="urlrow"><span class="k">URL</span><span class="urlhint" id="urlHint">plant.html</span></div>
+        <div class="urlrow"><span class="k">or type</span><span class="urlhint" id="urlHint">plant.html</span></div>
         <div class="pairstatus" id="pairStatus"><span class="dot"></span>Waiting for a phone…</div>
         <a class="skip" href="learn.html">Skip — take me to the tutorial →</a>
       </div>
@@ -639,6 +646,7 @@
   })();
 </script>
 
+<script src="qrcode.js"></script>
 <script>
   // ── Scrollytelling assembly: scatter dots → plant → speaker → pair ──
   (function () {
@@ -1026,12 +1034,22 @@
     var statusEl = document.getElementById('pairStatus');
     var urlHintEl = document.getElementById('urlHint');
     var pairBoxEl = document.getElementById('pairBox');
+    var qrBoxEl = document.getElementById('qrBox');
 
-    urlHintEl.textContent = (location.origin && location.origin.indexOf('http') === 0 ? location.origin + '/' : '') + 'plant.html';
+    var siteOrigin = (location.origin && location.origin.indexOf('http') === 0 ? location.origin + '/' : '');
+    urlHintEl.textContent = siteOrigin + 'plant.html';
 
     function renderCode(code) {
       var spans = codeDigitsEl.querySelectorAll('span');
       for (var i = 0; i < spans.length; i++) spans[i].textContent = code[i];
+    }
+    function renderQr(code) {
+      if (!qrBoxEl || typeof qrcode !== 'function') return;
+      var url = siteOrigin + 'plant.html?code=' + code;
+      var qr = qrcode(0, 'M');
+      qr.addData(url);
+      qr.make();
+      qrBoxEl.innerHTML = qr.createSvgTag({ scalable: true });
     }
     function setStatus(state) {
       if (state === 'waiting') { statusEl.className = 'pairstatus'; statusEl.innerHTML = '<span class="dot"></span>Waiting for a phone…'; pairBoxEl.classList.remove('is-live'); }
@@ -1059,6 +1077,7 @@
     function startHost() {
       roomCode = randomCode();
       renderCode(roomCode);
+      renderQr(roomCode);
       setStatus('waiting');
       try { ws = makeSignaling('host', roomCode); } catch (e) { setStatus('error'); return; }
       ws.onmessage = async function (ev) {
