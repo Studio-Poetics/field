@@ -64,6 +64,15 @@
     overflow: hidden; background: var(--bg);
   }
   #assemblyCanvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .scrolly .texture {
+    position: absolute; inset: -20% -20%; z-index: 1; pointer-events: none;
+    background-image: repeating-linear-gradient(135deg,
+      rgba(124,58,237,.05) 0px, rgba(124,58,237,.05) 2px,
+      transparent 2px, transparent 26px);
+    background-size: 220% 220%;
+    opacity: .5;
+    will-change: background-position;
+  }
   .scrolly .intro {
     position: absolute; top: 44%; left: 50%; transform: translate(-50%, -50%);
     width: 100%; max-width: 1180px; padding: 0 5vw; z-index: 4;
@@ -76,9 +85,10 @@
     max-width: 520px; line-height: 1.45;
   }
   .scrolly .caption {
-    position: absolute; left: 7vw; bottom: 13vh; max-width: 480px; z-index: 4;
+    position: absolute; left: 50%; bottom: 13vh; width: 90vw; max-width: 620px; z-index: 4;
+    transform: translateX(-50%);
     font-size: clamp(1.3rem, 2.8vw, 2rem); font-weight: 700; text-transform: uppercase;
-    letter-spacing: -.02em; line-height: 1.2; opacity: 0; transition: opacity .18s linear;
+    letter-spacing: -.02em; line-height: 1.2; text-align: center; opacity: 0; transition: opacity .18s linear;
     pointer-events: none;
   }
   .scrolly .caption.show { opacity: 1; }
@@ -293,6 +303,7 @@
 <section class="scrolly" id="assembly">
   <div class="pin">
     <canvas id="assemblyCanvas"></canvas>
+    <div class="texture" id="scrollTexture"></div>
 
     <div class="intro" id="introText">
       <div class="kick lbl">Physical–digital prototyping toolkit</div>
@@ -667,6 +678,7 @@
     var introEl = document.getElementById('introText');
     var hintEl = document.getElementById('scrollHint');
     var panelEl = document.getElementById('pairPanel');
+    var textureEl = document.getElementById('scrollTexture');
     var captions = Array.prototype.slice.call(document.querySelectorAll('.caption[data-band]'));
 
     var W = 0, H = 0, dpr = 1;
@@ -897,6 +909,10 @@
       // intro / hint fade — finishes just before the first caption opens
       introEl.style.opacity = progress < 0.03 ? 1 : Math.max(0, 1 - (progress - 0.03) / 0.10);
       hintEl.style.opacity = progress < 0.03 ? 1 : 0;
+
+      // subtle diagonal texture drifts with scroll so progress reads even
+      // when the particles themselves move slowly between bands
+      textureEl.style.backgroundPosition = (progress * -420) + 'px ' + (progress * 260) + 'px';
 
       // captions — each range starts once its visual is mostly formed and
       // holds well past full formation, and consecutive ranges touch (no
