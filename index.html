@@ -49,7 +49,7 @@
     "@type": "Organization",
     "name": "Studio Poetics"
   },
-  "softwareVersion": "0.1.14",
+  "softwareVersion": "0.1.15",
   "screenshot": "https://field.app/screenshot.png",
   "inLanguage": "en"
 }
@@ -597,7 +597,7 @@
 
 <div class="topbar">
   <div class="brand"><span class="sq"></span>FIELD</div>
-  <div class="right" id="verTag">V0.1.14 · DESKTOP · LOCAL-FIRST</div>
+  <div class="right" id="verTag">V0.1.15 · DESKTOP · LOCAL-FIRST</div>
 </div>
 
 <section class="scrolly" id="assembly">
@@ -674,8 +674,8 @@
         <div class="body">
           <div class="arch">Universal binary<br>Apple Silicon &amp; Intel · macOS 11+</div>
           <div class="dls">
-            <a class="lead" href="https://github.com/Studio-Poetics/field/releases/download/v0.1.14/FIELD-0.1.14-universal.dmg">.dmg <span class="k">Installer</span></a>
-            <a href="https://github.com/Studio-Poetics/field/releases/download/v0.1.14/FIELD-0.1.14-universal-mac.zip">.zip <span class="k">Portable</span></a>
+            <a class="lead" href="https://github.com/Studio-Poetics/field/releases/download/v0.1.15/FIELD-0.1.15-universal.dmg">.dmg <span class="k">Installer</span></a>
+            <a href="https://github.com/Studio-Poetics/field/releases/download/v0.1.15/FIELD-0.1.15-universal-mac.zip">.zip <span class="k">Portable</span></a>
           </div>
         </div>
       </div>
@@ -688,8 +688,8 @@
         <div class="body">
           <div class="arch">64-bit<br>Windows 10 / 11</div>
           <div class="dls">
-            <a class="lead" href="https://github.com/Studio-Poetics/field/releases/download/v0.1.14/FIELD.Setup.0.1.14.exe">.exe <span class="k">Installer</span></a>
-            <a href="https://github.com/Studio-Poetics/field/releases/download/v0.1.14/FIELD-0.1.14-win.zip">.zip <span class="k">Portable</span></a>
+            <a class="lead" href="https://github.com/Studio-Poetics/field/releases/download/v0.1.15/FIELD.Setup.0.1.15.exe">.exe <span class="k">Installer</span></a>
+            <a href="https://github.com/Studio-Poetics/field/releases/download/v0.1.15/FIELD-0.1.15-win.zip">.zip <span class="k">Portable</span></a>
           </div>
         </div>
       </div>
@@ -896,24 +896,24 @@
     else if (/mac/.test(p) || /iphone|ipad|ipod/.test(p)) os = 'mac';
     else if (/linux|x11|android/.test(p)) os = 'linux';
 
-    var base = 'https://github.com/Studio-Poetics/field/releases/download/v0.1.14/';
+    var base = 'https://github.com/Studio-Poetics/field/releases/download/v0.1.15/';
     var rec = { label: '', title: '', sub: '', href: '#all', btn: 'See all downloads', alt: '', card: null };
 
     if (os === 'win') {
       rec.label = 'Detected · Windows';
       rec.title = 'FIELD for Windows';
       rec.sub = 'Windows 10 / 11 · 64-bit installer.';
-      rec.href = base + 'FIELD.Setup.0.1.14.exe';
+      rec.href = base + 'FIELD.Setup.0.1.15.exe';
       rec.btn = 'Download .exe';
-      rec.alt = 'No installer? <a href="' + base + 'FIELD-0.1.14-win.zip">Portable .zip</a>';
+      rec.alt = 'No installer? <a href="' + base + 'FIELD-0.1.15-win.zip">Portable .zip</a>';
       rec.card = 'win';
     } else if (os === 'mac') {
       rec.label = 'Detected · macOS';
       rec.title = 'FIELD for macOS';
       rec.sub = 'Universal build — Apple Silicon and Intel.';
-      rec.href = base + 'FIELD-0.1.14-universal.dmg';
+      rec.href = base + 'FIELD-0.1.15-universal.dmg';
       rec.btn = 'Download .dmg';
-      rec.alt = 'No installer? <a href="' + base + 'FIELD-0.1.14-universal-mac.zip">Portable .zip</a>';
+      rec.alt = 'No installer? <a href="' + base + 'FIELD-0.1.15-universal-mac.zip">Portable .zip</a>';
       rec.card = 'mac';
     } else if (os === 'linux') {
       rec.label = 'Detected · Linux';
